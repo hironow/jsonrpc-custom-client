@@ -16,8 +16,8 @@ test.describe("[realws] Notification stream appears in sidebar", () => {
 			timeout: 15000,
 		});
 
-		// Open the notifications sidebar and wait for a heartbeat notification
-		await page.getByRole("button", { name: "Notifications" }).click();
+		// Switch to the Notifications tab in the right sidebar and wait for a heartbeat notification
+		await page.getByRole("tab", { name: "Notifications" }).click();
 		await expect(page.getByText(/stream\.heartbeat/)).toBeVisible({
 			timeout: 20000,
 		});
