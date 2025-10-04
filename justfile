@@ -26,7 +26,8 @@ lint:
 
 # Run local E2E smoke tests
 e2e:
-    pnpm playwright:install
+    # Install Playwright browsers only for local runs; CI pre-installs & caches them
+    if [ -z "${CI:-}" ]; then pnpm playwright:install; fi
     pnpm run test:e2e
 
 # Run E2E against local real WebSocket server
