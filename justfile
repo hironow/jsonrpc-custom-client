@@ -28,15 +28,15 @@ e2e:
     pnpm run test:e2e
 
 # Run E2E against local real WebSocket server
-e2e-real ws_url='ws://localhost:9999/ws':
+e2e-real ws_url='ws://localhost:9191/ws':
     #!/usr/bin/env bash
     set -euo pipefail
     started=0
     port_open() {
       if command -v nc >/dev/null 2>&1; then
-        nc -z 127.0.0.1 9999 >/dev/null 2>&1
+        nc -z 127.0.0.1 9191 >/dev/null 2>&1
       else
-        (echo >/dev/tcp/127.0.0.1/9999) >/dev/null 2>&1 || return 1
+        (echo >/dev/tcp/127.0.0.1/9191) >/dev/null 2>&1 || return 1
       fi
     }
     if ! port_open; then
@@ -44,9 +44,9 @@ e2e-real ws_url='ws://localhost:9999/ws':
         echo "Go not found (required to run local WS server)." >&2
         exit 1
       fi
-      echo "Starting local WS JSON-RPC server at :9999 ..."
+      echo "Starting local WS JSON-RPC server at :9191 ..."
       mkdir -p scripts/ws-jsonrpc-server/logs
-      (cd scripts/ws-jsonrpc-server && go mod download && go build -o server . && ./server --addr :9999 --path /ws) > scripts/ws-jsonrpc-server/logs/server.log 2>&1 &
+      (cd scripts/ws-jsonrpc-server && go mod download && go build -o server . && ./server --addr :9191 --path /ws) > scripts/ws-jsonrpc-server/logs/server.log 2>&1 &
       srv_pid=$!
       started=1
       # Wait until port is open (max ~30s)

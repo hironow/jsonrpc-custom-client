@@ -95,11 +95,11 @@ Playwright を使ったE2Eテストを同梱し、CIでも実行しています�
 - 配置: `scripts/ws-jsonrpc-server`（`go.mod` 同梱、依存: `github.com/gorilla/websocket`）
 - 起動例:
   - `cd scripts/ws-jsonrpc-server`
-  - `go run . --addr :9999 --path /ws`
-- 接続URL: `ws://localhost:9999/ws`
+  - `go run . --addr :9191 --path /ws`
+- 接続URL: `ws://localhost:9191/ws`
 - 使い方（E2E）:
   - 別ターミナルで Next dev を起動: `pnpm dev`
-  - 本READMEの上記URLを環境変数に: `export E2E_REAL_WS_URL=ws://localhost:9999/ws`
+  - 本READMEの上記URLを環境変数に: `export E2E_REAL_WS_URL=ws://localhost:9191/ws`
   - E2E実行: `pnpm test:e2e` もしくは `pnpm test:e2e:real`（または `just e2e-real`）
 
 対応メソッド:

@@ -129,7 +129,7 @@ func handleSingle(raw json.RawMessage) (rpcResponse, bool) {
 }
 
 func main() {
-    addr := flag.String("addr", ":9999", "listen address (e.g. :9999)")
+    addr := flag.String("addr", ":9191", "listen address (e.g. :9191)")
     path := flag.String("path", "/ws", "websocket path")
     flag.Parse()
 
