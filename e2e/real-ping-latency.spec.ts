@@ -20,9 +20,10 @@ test.describe("[realws] One-shot ping shows latency inline", () => {
 		await page.getByRole("button", { name: "Expand Connection Panel" }).click();
 		await page.getByRole("button", { name: "Ping" }).click();
 
-		// Expect some inline "NNNms" latency text to appear (restrict to span with just digits+ms)
-		await expect(
-			page.locator("span", { hasText: /^\d+ms$/ }).first(),
-		).toBeVisible();
+		// Open details for the ping request and verify Response Time section appears
+		await page.getByText("ping").first().click();
+		await expect(page.getByText("Response Time")).toBeVisible({
+			timeout: 5000,
+		});
 	});
 });

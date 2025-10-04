@@ -16,11 +16,13 @@ test.describe("[realws] Notification stream appears in sidebar", () => {
 			timeout: 15000,
 		});
 
-		// Open Notifications panel from header and wait for entries
+		// Wait for at least one heartbeat to arrive, then open the sidebar
+		await expect(page.getByText(/stream\.heartbeat/i)).toBeVisible({
+			timeout: 20000,
+		});
 		await page.getByRole("button", { name: "Notifications" }).click();
-		// Wait until "No notifications yet" disappears, indicating at least one arrived
-		await expect(page.getByText("No notifications yet")).toBeHidden({
-			timeout: 15000,
+		await expect(page.getByText(/stream\.heartbeat/i)).toBeVisible({
+			timeout: 5000,
 		});
 	});
 });
