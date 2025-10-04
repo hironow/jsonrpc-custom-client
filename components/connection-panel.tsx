@@ -26,6 +26,9 @@ type ConnectionPanelProps = {
 	onConnect: () => void;
 	onDisconnect: () => void;
 	onDummyModeChange: (enabled: boolean) => void;
+	fastPingEnabled?: boolean;
+	onFastPingChange?: (enabled: boolean) => void;
+	onPing?: () => void;
 };
 
 export function ConnectionPanel({
@@ -36,6 +39,9 @@ export function ConnectionPanel({
 	onConnect,
 	onDisconnect,
 	onDummyModeChange,
+	fastPingEnabled,
+	onFastPingChange,
+	onPing,
 }: ConnectionPanelProps) {
 	const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -105,6 +111,12 @@ export function ConnectionPanel({
 								Dummy
 							</Badge>
 						)}
+						{fastPingEnabled && (
+							<Badge variant="outline" className="text-[10px]">
+								<span className="w-2 h-2 rounded-full bg-primary mr-1.5 inline-block" />
+								Fast Ping
+							</Badge>
+						)}
 					</div>
 					<div className="flex items-center gap-2">
 						<Button
@@ -164,6 +176,38 @@ export function ConnectionPanel({
 						checked={dummyMode}
 						onCheckedChange={onDummyModeChange}
 						disabled={status === "connecting"}
+					/>
+				</div>
+
+				{/* Fast Ping toggle */}
+				<div className="flex items-center justify-between p-2 rounded bg-muted/50 border border-border">
+					<div className="flex items-center gap-1.5">
+						<span className="w-3 h-3 rounded-full bg-primary/60" />
+						<Label
+							htmlFor="fast-ping"
+							className="text-xs font-medium cursor-pointer"
+						>
+							Fast JSON-RPC Ping (100ms)
+						</Label>
+					</div>
+
+					{/* One-shot JSON-RPC ping */}
+					<div className="flex items-center justify-end">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={onPing}
+							disabled={status !== "connected" || dummyMode}
+							className="h-7 text-xs"
+						>
+							Ping
+						</Button>
+					</div>
+					<Switch
+						id="fast-ping"
+						checked={!!fastPingEnabled}
+						onCheckedChange={onFastPingChange}
+						disabled={status !== "connected" || dummyMode}
 					/>
 				</div>
 

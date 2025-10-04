@@ -56,10 +56,14 @@ export function useWebSocketClient(options?: {
 		useState<boolean>(false);
 	const [bufferDropChunkSize, setBufferDropChunkSize] = useState<number>(1);
 
+	// Fast ping toggle (disabled by default)
+	const [fastPingEnabled, setFastPingEnabled] = useState<boolean>(false);
+
 	const wsRef = useRef<WebSocket | null>(null);
 	const messageIdCounter = useRef(1);
 	const dummyIntervalRef = useRef<NodeJS.Timeout | null>(null);
 	const autoRequestIntervalRef = useRef<NodeJS.Timeout | null>(null);
+	const fastPingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 	const pendingRequestsRef = useRef<
 		Map<number, { timestamp: number; messageId: string }>
 	>(new Map());
@@ -333,6 +337,8 @@ export function useWebSocketClient(options?: {
 			if (autoRequestIntervalRef.current)
 				clearInterval(autoRequestIntervalRef.current);
 			if (dummyIntervalRef.current) clearInterval(dummyIntervalRef.current);
+			if (fastPingIntervalRef.current)
+				timer.clearInterval(fastPingIntervalRef.current);
 			setStatus("disconnected");
 			addSystemMessage("Dummy mode deactivated");
 			return;
@@ -408,6 +414,11 @@ export function useWebSocketClient(options?: {
 				data: { message: "Failed to send: " + (error as Error).message },
 			});
 		}
+	};
+
+	const sendPing = () => {
+		// Convenience method for JSON-RPC ping
+		sendMessage("ping", {});
 	};
 
 	const sendBatchMessage = (
@@ -523,6 +534,8 @@ export function useWebSocketClient(options?: {
 				timer.clearInterval(autoRequestIntervalRef.current);
 			if (dummyIntervalRef.current)
 				timer.clearInterval(dummyIntervalRef.current);
+			if (fastPingIntervalRef.current)
+				timer.clearInterval(fastPingIntervalRef.current);
 			if (reconnectTimeoutRef.current)
 				timer.clearTimeout(reconnectTimeoutRef.current);
 		};
@@ -544,6 +557,35 @@ export function useWebSocketClient(options?: {
 		bufferDropChunkSize,
 	]);
 
+	// Start/stop 100ms ping when enabled and connected (non-dummy)
+	useEffect(() => {
+		// clear any existing interval first
+		if (fastPingIntervalRef.current) {
+			timer.clearInterval(fastPingIntervalRef.current);
+			fastPingIntervalRef.current = null;
+		}
+
+		if (
+			fastPingEnabled &&
+			!dummyMode &&
+			status === "connected" &&
+			wsRef.current &&
+			wsRef.current.readyState === WebSocket.OPEN
+		) {
+			fastPingIntervalRef.current = timer.setInterval(() => {
+				// Use existing send flow to record messages/latency
+				sendPing();
+			}, 100);
+		}
+
+		return () => {
+			if (fastPingIntervalRef.current) {
+				timer.clearInterval(fastPingIntervalRef.current);
+				fastPingIntervalRef.current = null;
+			}
+		};
+	}, [fastPingEnabled, status, dummyMode]);
+
 	return {
 		url,
 		setUrl,
@@ -559,6 +601,9 @@ export function useWebSocketClient(options?: {
 		setBufferDropChunkSize,
 		dummyMode,
 		setDummyMode,
+		fastPingEnabled,
+		setFastPingEnabled,
+		sendPing,
 		connect,
 		disconnect,
 		sendMessage,
