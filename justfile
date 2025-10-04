@@ -17,6 +17,8 @@ test-ci:
 # Format the codebase with Biome
 format:
     pnpm run format
+    # Optionally format Go server (skip if Go is not installed)
+    (cd scripts/ws-jsonrpc-server && go fmt ./...) || echo "Skipping Go formatting (go not installed?)"
 
 # Lint the codebase (ESLint via Next)
 lint:
