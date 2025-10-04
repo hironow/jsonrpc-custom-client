@@ -34,6 +34,7 @@ jobs:
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
+        id: pnpm-store-cache
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
@@ -43,6 +44,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: pw-version
+        run: echo "PW_VERSION=$(node -p \"require('@playwright/test/package.json').version\")" >> $GITHUB_OUTPUT
 
       - name: Install just (rust-just via pipx)
         run: pipx install rust-just
@@ -59,6 +64,7 @@ jobs:
           echo "gocache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
 
       - name: Cache Go modules and build cache
+        id: go-cache-step
         uses: actions/cache@v4
         with:
           path: |
@@ -73,13 +79,20 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
+          key: ${{ runner.os }}-playwright-browsers-v${{ steps.pw-version.outputs.PW_VERSION }}
 
       - name: Install Playwright (chromium only)
         if: steps.playwright-browsers-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
+
+      - name: Cache hits summary (before tests)
+        if: always()
+        run: |
+          echo "pnpm store cache hit: ${{ steps.pnpm-store-cache.outputs.cache-hit }}"
+          echo "Go cache hit: ${{ steps.go-cache-step.outputs.cache-hit }}"
+          echo "Playwright cache hit: ${{ steps.playwright-browsers-cache.outputs.cache-hit }}"
+          echo "Playwright version: ${{ steps.pw-version.outputs.PW_VERSION }}"
+          echo "Hashes — pnpm-lock: ${{ hashFiles('pnpm-lock.yaml') }}, go.mod: ${{ hashFiles('scripts/ws-jsonrpc-server/go.mod') }}"
 
       - name: Type check + Unit tests (just)
         run: just test-ci
@@ -91,6 +104,7 @@ jobs:
         run: just e2e-real
 
       - name: Restore Next.js build cache
+        id: next-cache
         uses: actions/cache@v4
         with:
           path: .next/cache
@@ -100,3 +114,8 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Cache hits summary (after build)
+        if: always()
+        run: |
+          echo "Next cache restored: ${{ steps.next-cache.outputs.cache-hit }}"
