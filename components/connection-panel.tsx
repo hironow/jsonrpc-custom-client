@@ -260,7 +260,10 @@ export function ConnectionPanel({
 						<div className="text-xs text-muted-foreground">Ping</div>
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<div className="text-xs font-mono text-foreground cursor-default">
+								<div
+									className="text-xs font-mono text-foreground cursor-default"
+									data-testid="ping-inline-trigger"
+								>
 									<span data-testid="ping-inline-matched">{pingMatched}</span>/
 									<span data-testid="ping-inline-total">{pingTotal}</span>
 									{typeof pingMissing === "number" && (

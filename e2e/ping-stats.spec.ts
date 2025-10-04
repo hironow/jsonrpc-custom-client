@@ -15,6 +15,12 @@ test.describe("Ping counters in Connection panel and collapsed header", () => {
 		// Expand Connection panel
 		await page.getByRole("button", { name: "Expand Connection Panel" }).click();
 
+		// Hover inline counters trigger to see tooltip
+		await page.getByTestId("ping-inline-trigger").hover();
+		await expect(
+			page.getByText("Ping matched/total. Missing = unanswered pings."),
+		).toBeVisible();
+
 		// Initial counters should be 0/0, missing 0
 		await expect(page.getByTestId("ping-inline-matched")).toHaveText("0");
 		await expect(page.getByTestId("ping-inline-total")).toHaveText("0");
@@ -37,5 +43,12 @@ test.describe("Ping counters in Connection panel and collapsed header", () => {
 		await expect(page.getByTestId("badge-ping-collapsed")).toHaveText(
 			/Ping\s+1\/1/,
 		);
+
+		// Performance tab tooltip
+		await page.getByRole("tab", { name: "Performance" }).click();
+		await page.getByText("Ping / Pong").hover();
+		await expect(
+			page.getByText("Ping matched/total. Missing = unanswered pings."),
+		).toBeVisible();
 	});
 });
