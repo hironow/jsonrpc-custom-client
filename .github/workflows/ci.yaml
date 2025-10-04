@@ -27,8 +27,7 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.18.0
+        # Let the action read the pinned version from package.json's `packageManager`
 
       - name: Determine pnpm store path
         id: pnpm-store
