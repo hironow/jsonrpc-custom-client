@@ -91,10 +91,10 @@ jobs:
       - name: Cache hits summary (before tests)
         if: always()
         run: |
-          echo "pnpm store cache hit: ${{ steps.pnpm-store-cache.outputs.cache-hit }}"
-          echo "Go cache hit: ${{ steps.go-cache-step.outputs.cache-hit }}"
-          echo "Playwright cache hit: ${{ steps.playwright-browsers-cache.outputs.cache-hit }}"
-          echo "Playwright version: ${{ steps.pw-version.outputs.PW_VERSION }}"
+          echo "pnpm store cache hit: ${{ steps['pnpm-store-cache'].outputs['cache-hit'] || 'false' }}"
+          echo "Go cache hit: ${{ steps['go-cache-step'].outputs['cache-hit'] || 'false' }}"
+          echo "Playwright cache hit: ${{ steps['playwright-browsers-cache'].outputs['cache-hit'] || 'false' }}"
+          echo "Playwright version: ${{ steps['pw-version'].outputs.PW_VERSION }}"
           echo "Hashes — pnpm-lock: ${{ hashFiles('pnpm-lock.yaml') }}, go.mod: ${{ hashFiles('scripts/ws-jsonrpc-server/go.mod') }}"
 
       - name: Type check + Unit tests (just)
@@ -123,4 +123,4 @@ jobs:
       - name: Cache hits summary (after build)
         if: always()
         run: |
-          echo "Next cache restored: ${{ steps.next-cache.outputs.cache-hit }}"
+          echo "Next cache restored: ${{ steps['next-cache'].outputs['cache-hit'] || 'false' }}"
