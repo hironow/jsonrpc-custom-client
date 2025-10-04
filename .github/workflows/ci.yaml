@@ -18,6 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -33,7 +39,7 @@ jobs:
         run: pnpm test:unit
 
       - name: Install Playwright browsers
-        uses: microsoft/playwright-github-action@v1
+        run: pnpm playwright:install
 
       - name: E2E tests
         run: pnpm test:e2e
