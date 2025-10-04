@@ -21,4 +21,3 @@ This document summarizes a few practical presets you can apply via the Performan
   - Intent: protect in-flight requests while not over-favoring batches.
 
 Tip: After changing options, the hook trims immediately to respect the limit. If you’re experimenting, consider increasing the limit temporarily to observe behavior without drops.
-

@@ -24,7 +24,7 @@ test.describe("[realws] Fast ping ON/OFF against real WS", () => {
 		await page.getByRole("button", { name: "Expand Connection Panel" }).click();
 
 		// Turn ON fast ping
-		await page.getByLabel("Fast JSON-RPC Ping (100ms)").click();
+		await page.getByLabel("Fast JSONRPC Ping (100ms)").click();
 
 		// Wait until at least one ping has been sent
 		await expect(page.getByTestId("ping-inline-total")).not.toHaveText("0", {
@@ -42,7 +42,7 @@ test.describe("[realws] Fast ping ON/OFF against real WS", () => {
 		);
 
 		// Turn OFF fast ping
-		await page.getByLabel("Fast JSON-RPC Ping (100ms)").click();
+		await page.getByLabel("Fast JSONRPC Ping (100ms)").click();
 
 		// Give some time to observe no further growth
 		await page.waitForTimeout(800);

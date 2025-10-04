@@ -14,7 +14,7 @@ test.describe("Collapsed header shows Fast Ping badge when enabled", () => {
 
 		// Expand connection panel and enable Fast Ping
 		await page.getByRole("button", { name: "Expand Connection Panel" }).click();
-		await page.getByLabel("Fast JSON-RPC Ping (100ms)").click();
+		await page.getByLabel("Fast JSONRPC Ping (100ms)").click();
 
 		// Collapse and assert badge is visible
 		await page

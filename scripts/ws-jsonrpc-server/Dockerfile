@@ -1,4 +1,4 @@
-# Multi-stage build for Go WS JSON-RPC server targeting Cloud Run
+# Multi-stage build for Go WS JSONRPC server targeting Cloud Run
 
 FROM golang:1.21-alpine AS builder
 WORKDIR /src
@@ -16,4 +16,3 @@ EXPOSE 8080
 COPY --from=builder /out/server /server
 USER 65532:65532
 ENTRYPOINT ["/server"]
-

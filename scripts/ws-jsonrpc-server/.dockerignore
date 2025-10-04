@@ -1,0 +1,33 @@
+# Version control
+.git
+.gitignore
+.github/
+
+# OS/editor junk
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Node (defensive; not used here but common in monorepos)
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Go build artifacts
+server
+server.exe
+*.out
+bin/
+coverage/
+
+# Logs
+logs/
+*.log
+
+# Docker/CI cache
+.cache/
+**/.cache/
+

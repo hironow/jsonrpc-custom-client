@@ -33,6 +33,8 @@ type ConnectionPanelProps = {
 	onDummyModeChange: (enabled: boolean) => void;
 	fastPingEnabled?: boolean;
 	onFastPingChange?: (enabled: boolean) => void;
+	fastPingIntervalMs?: number;
+	onFastPingIntervalChange?: (ms: number) => void;
 	onPing?: () => void;
 	pingTotal?: number;
 	pingMatched?: number;
@@ -49,6 +51,8 @@ export function ConnectionPanel({
 	onDummyModeChange,
 	fastPingEnabled,
 	onFastPingChange,
+	fastPingIntervalMs,
+	onFastPingIntervalChange,
 	onPing,
 	pingTotal,
 	pingMatched,
@@ -135,7 +139,7 @@ export function ConnectionPanel({
 									</Badge>
 								</TooltipTrigger>
 								<TooltipContent side="bottom">
-									Fast 100ms ping is ON
+									Fast {fastPingIntervalMs ?? 100}ms ping is ON
 								</TooltipContent>
 							</Tooltip>
 						)}
@@ -228,11 +232,11 @@ export function ConnectionPanel({
 							htmlFor="fast-ping"
 							className="text-xs font-medium cursor-pointer"
 						>
-							Fast JSON-RPC Ping (100ms)
+							Fast JSONRPC Ping ({fastPingIntervalMs ?? 100}ms)
 						</Label>
 					</div>
 
-					{/* One-shot JSON-RPC ping */}
+					{/* One-shot JSONRPC ping */}
 					<div className="flex items-center justify-end">
 						<Button
 							variant="outline"
@@ -244,12 +248,29 @@ export function ConnectionPanel({
 							Ping
 						</Button>
 					</div>
-					<Switch
-						id="fast-ping"
-						checked={!!fastPingEnabled}
-						onCheckedChange={onFastPingChange}
-						disabled={status !== "connected"}
-					/>
+					<div className="flex items-center gap-2">
+						<Input
+							aria-label="Fast Ping Interval (ms)"
+							type="number"
+							min={10}
+							step={10}
+							value={fastPingIntervalMs ?? 100}
+							onChange={(e) => {
+								const v = parseInt(e.target.value, 10);
+								if (!Number.isNaN(v) && onFastPingIntervalChange) {
+									onFastPingIntervalChange(Math.max(10, Math.min(60000, v)));
+								}
+							}}
+							className="h-7 w-20 text-xs"
+							disabled={status !== "connected"}
+						/>
+						<Switch
+							id="fast-ping"
+							checked={!!fastPingEnabled}
+							onCheckedChange={onFastPingChange}
+							disabled={status !== "connected"}
+						/>
+					</div>
 				</div>
 
 				{typeof pingTotal === "number" && typeof pingMatched === "number" && (
