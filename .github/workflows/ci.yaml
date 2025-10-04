@@ -47,7 +47,10 @@ jobs:
 
       - name: Get Playwright version
         id: pw-version
-        run: echo "PW_VERSION=$(node -p \"require('@playwright/test/package.json').version\")" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          PW_VERSION=$(node -p "require('@playwright/test/package.json').version")
+          echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install just (rust-just via pipx)
         run: pipx install rust-just

@@ -27,6 +27,8 @@ test.describe("[realws] echo returns params as result", () => {
 		await page.getByRole("button", { name: /^Send Request$/ }).click();
 
 		// Expect the response JSON to include the echoed params
-		await expect(page.getByText(/"hello"\s*:\s*"world"/)).toBeVisible();
+		await expect(
+			page.getByText(/→\s*\{\s*"hello"\s*:\s*"world"\s*\}/),
+		).toBeVisible();
 	});
 });
