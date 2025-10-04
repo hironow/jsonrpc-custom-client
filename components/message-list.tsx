@@ -261,7 +261,6 @@ export function MessageList({
 					<Button
 						variant="outline"
 						size="sm"
-						aria-label="Preset: Method 'user'"
 						className="h-6 text-[11px] px-2"
 						onClick={() => setPresetQuickFilter({ method: "user" })}
 					>
@@ -270,7 +269,6 @@ export function MessageList({
 					<Button
 						variant="outline"
 						size="sm"
-						aria-label="Preset: ID '1'"
 						className="h-6 text-[11px] px-2"
 						onClick={() => setPresetQuickFilter({ id: "1" })}
 					>
@@ -279,7 +277,6 @@ export function MessageList({
 					<Button
 						variant="outline"
 						size="sm"
-						aria-label="Preset: Text 'error'"
 						className="h-6 text-[11px] px-2"
 						onClick={() => setPresetQuickFilter({ text: "error" })}
 					>
@@ -288,7 +285,6 @@ export function MessageList({
 					<Button
 						variant="ghost"
 						size="sm"
-						aria-label="Preset: Reset"
 						className="h-6 text-[11px] px-2"
 						onClick={() => setPresetQuickFilter(undefined)}
 					>

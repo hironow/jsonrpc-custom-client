@@ -39,9 +39,12 @@ export function useWebSocketClient(options?: {
 	timer?: TimerLike;
 	wsFactory?: WebSocketFactory;
 	reconnect?: ReconnectOptions;
+	rng?: () => number;
+	dummy?: { autoRequestIntervalMs?: number; notificationIntervalMs?: number };
 }) {
 	const timer = options?.timer ?? defaultTimer;
 	const wsFactory = options?.wsFactory ?? ((u: string) => new WebSocket(u));
+	const rng = options?.rng ?? Math.random;
 	const [url, setUrl] = useState(getDefaultWsUrl());
 	const [status, setStatus] = useState<ConnectionStatus>("disconnected");
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -123,13 +126,13 @@ export function useWebSocketClient(options?: {
 			addSystemMessage("Dummy mode activated - Simulating JSONRPC stream");
 
 			autoRequestIntervalRef.current = timer.setInterval(() => {
-				const rand = Math.random();
+				const rand = rng();
 				if (rand < 0.4) {
-					const size = 2 + Math.floor(Math.random() * 3);
+					const size = 2 + Math.floor(rng() * 3);
 					const batchMessages = Array.from({ length: size }).map(() => ({
 						jsonrpc: "2.0",
 						method: "dummy.method",
-						params: { n: Math.random() },
+						params: { n: rng() },
 						id: messageIdCounter.current++,
 					}));
 					sendBatchMessage(
@@ -139,10 +142,10 @@ export function useWebSocketClient(options?: {
 					const id = messageIdCounter.current++;
 					sendMessage("dummy.method", { n: id });
 				}
-			}, 2500);
+			}, options?.dummy?.autoRequestIntervalMs ?? 2500);
 
 			dummyIntervalRef.current = timer.setInterval(() => {
-				const rand = Math.random();
+				const rand = rng();
 				if (rand < 0.6) {
 					const now = timer.now ? timer.now() : Date.now();
 					addMessage({
@@ -156,12 +159,12 @@ export function useWebSocketClient(options?: {
 						data: {
 							jsonrpc: "2.0",
 							method: "notification",
-							params: { n: Math.random() },
+							params: { n: rng() },
 						},
 						isNotification: true,
 					});
 				}
-			}, 1500);
+			}, options?.dummy?.notificationIntervalMs ?? 1500);
 		}, 800);
 	};
 

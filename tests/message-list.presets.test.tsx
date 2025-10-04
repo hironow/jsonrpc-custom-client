@@ -84,23 +84,19 @@ describe("MessageList quick filter presets (UI)", () => {
 		expect(getAllTabText()).toMatch(/All\s*4/);
 
 		// Click method preset (contains 'user')
-		fireEvent.click(
-			screen.getByRole("button", { name: /Preset: Method 'user'/ }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: /Method:user/ }));
 		expect(getAllTabText()).toMatch(/All\s*1/);
 
 		// Click ID preset (exact match on any id in payload)
-		fireEvent.click(screen.getByRole("button", { name: /Preset: ID '1'/ }));
+		fireEvent.click(screen.getByRole("button", { name: /ID:1/ }));
 		expect(getAllTabText()).toMatch(/All\s*2/);
 
 		// Click Text preset (substring 'error' in payload JSON)
-		fireEvent.click(
-			screen.getByRole("button", { name: /Preset: Text 'error'/ }),
-		);
+		fireEvent.click(screen.getByRole("button", { name: /Text:error/ }));
 		expect(getAllTabText()).toMatch(/All\s*1/);
 
 		// Clear preset restores totals
-		fireEvent.click(screen.getByRole("button", { name: /Preset: Reset/ }));
+		fireEvent.click(screen.getByRole("button", { name: /Reset Preset/ }));
 		expect(getAllTabText()).toMatch(/All\s*4/);
 	});
 });

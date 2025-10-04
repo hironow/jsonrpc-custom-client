@@ -112,6 +112,42 @@ export function MyClient() {
   - ポリシーの単体テストは `tests/use-websocket-reconnect-policy.test.tsx` を参照。
   - タイマー/WSはDIされ、偽タイマーで決定的に検証します。
 
+## Dummy Mode DI
+
+Dummy Mode（バックエンド不要の擬似ストリーム）は、テストやデモ用途で挙動を決定的にするための DI ポイントを提供します。
+
+- オプション（`useWebSocketClient` に渡す）
+  - `rng?: () => number`
+    - 既定: `Math.random`
+    - 分岐に使う乱数ソースを差し替えます（例: `rng: () => 0.55` なら一定確率で通知分岐に必ず入る）。
+  - `dummy?: { autoRequestIntervalMs?: number; notificationIntervalMs?: number }`
+    - `autoRequestIntervalMs` 既定 2500 — ダミーの自動リクエスト/バッチ発火の間隔
+    - `notificationIntervalMs` 既定 1500 — ダミーの通知（stream.*）発火の間隔
+
+- 実装（参照）
+  - フック: `hooks/use-websocket-client.ts`
+    - Dummy Mode の分岐 `Math.random()` を `rng()` に置換
+    - 送信・通知の `setInterval` 間隔を `dummy.*` で上書き
+  - 単体テスト: `tests/use-websocket-dummy-di.test.tsx`
+
+- 使用例
+
+```ts
+import { useWebSocketClient } from "@/hooks/use-websocket-client";
+
+export function DemoClient() {
+  const { status, connect, setDummyMode } = useWebSocketClient({
+    rng: () => 0.55, // 通知分岐に入りやすい固定値
+    dummy: {
+      notificationIntervalMs: 100,   // 通知を高速化
+      autoRequestIntervalMs: 10_000, // 自動リクエストは抑制
+    },
+  });
+  // ...
+}
+```
+
+
 ## Development Style
 
 - Tidy First → Tests: extract logic and add tests before modifying behavior.
