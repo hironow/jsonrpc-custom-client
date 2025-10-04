@@ -16,7 +16,9 @@ test.describe("[realws] Fast ping ON/OFF against real WS", () => {
 		const urlBox = page.getByPlaceholder("ws://localhost:8080");
 		await urlBox.fill(REAL_URL!);
 		await page.getByRole("button", { name: /^Connect$/ }).click();
-		await expect(page.getByText(/Connected/)).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: "Disconnect" }),
+		).toBeVisible();
 
 		// Expand controls
 		await page.getByRole("button", { name: "Expand Connection Panel" }).click();
