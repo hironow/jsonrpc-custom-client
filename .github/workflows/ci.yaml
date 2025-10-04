@@ -14,6 +14,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -30,8 +32,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright browsers
-        run: pnpm playwright:install
+      - name: Cache Playwright browsers
+        id: playwright-browsers-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright (chromium only)
+        if: steps.playwright-browsers-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
 
       - name: Type check
         run: pnpm tsc --noEmit
