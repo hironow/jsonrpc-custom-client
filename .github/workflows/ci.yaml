@@ -102,6 +102,8 @@ jobs:
 
       - name: E2E tests (just e2e)
         run: just e2e
+        env:
+          CI: true
 
       - name: E2E tests (just e2e-real)
         run: just e2e-real
