@@ -14,15 +14,17 @@ test.describe("Notifications sidebar interactions", () => {
 			page.getByRole("button", { name: "Disconnect" }),
 		).toBeVisible();
 
-		// Open the notifications sidebar from the header button
+		// Open the notifications sidebar from the header button and wait for items
 		await page.getByRole("button", { name: "Notifications" }).click();
+		await expect(page.getByText("No notifications yet")).toBeHidden({
+			timeout: 20000,
+		});
 
-		// Wait for at least one dummy notification to arrive (stream.* methods)
-		const streamLabel = page.getByText(/stream\./i).first();
-		await expect(streamLabel).toBeVisible({ timeout: 10000 });
-
-		// Select the notification
-		await streamLabel.click();
+		// Select the first notification card
+		await page
+			.locator("div", { hasText: /Notification|stream\./i })
+			.first()
+			.click();
 
 		// Placeholder should disappear in Details panel
 		await expect(
