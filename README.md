@@ -75,6 +75,37 @@ Playwright を使ったE2Eテストを同梱し、CIでも実行しています�
 - サンプル: `e2e/basic.spec.ts` はトップページ表示→Dummy Mode→Connect→Connected表示までを検証します（バックエンド不要）。
 - 追加: `e2e/devtools-analog.spec.ts` は DevTools 相当の操作（入力/クリック/ダイアログ/ファイルアップロード/タイトル）を単一ページ上で検証します。
 
+#### Real WebSocket (optional)
+
+実WebSocketでの Fast Ping のON/OFF を検証するテストを用意しています（既定は skip）。
+
+- 環境変数: `E2E_REAL_WS_URL` に接続先WS URLを設定すると有効化されます。
+  - 例（macOS/Linux）: `export E2E_REAL_WS_URL="wss://your-server.example/ws"`
+  - 例（Windows PowerShell）: `$env:E2E_REAL_WS_URL="wss://your-server.example/ws"`
+- 実行: `pnpm test:e2e`（またはローカルサーバの場合 `pnpm test:e2e:real` / `just e2e-real`）
+- 対象: `e2e/fast-ping-realws.spec.ts`
+- 振る舞い: 接続後に「Fast JSON-RPC Ping (100ms)」をON→`Ping`総数が増えることを確認→OFF→一定時間後も総数が増えないことを確認
+
+注: Dummy ModeのままでもUI上はトグル可能ですが、100ms送信は実WS接続時のみ動作します（E2Eのため）。
+
+##### Local real WS server (Go)
+
+ローカルで簡単に実WSを用意するため、Go製の最小サーバを同梱しています。
+
+- 配置: `scripts/ws-jsonrpc-server`（`go.mod` 同梱、依存: `github.com/gorilla/websocket`）
+- 起動例:
+  - `cd scripts/ws-jsonrpc-server`
+  - `go run . --addr :9999 --path /ws`
+- 接続URL: `ws://localhost:9999/ws`
+- 使い方（E2E）:
+  - 別ターミナルで Next dev を起動: `pnpm dev`
+  - 本READMEの上記URLを環境変数に: `export E2E_REAL_WS_URL=ws://localhost:9999/ws`
+  - E2E実行: `pnpm test:e2e` もしくは `pnpm test:e2e:real`（または `just e2e-real`）
+
+対応メソッド:
+- `ping` → `{"jsonrpc":"2.0","result":{"pong":true},"id":<same>}` を返却
+- Batch も処理します（通知はレスポンス無し）
+
 ## Reconnect Policy
 
 `hooks/use-websocket-client.ts` は自動再接続のポリシーをDI可能です。既定値のままでも後方互換の指数バックオフで動作します（base=500ms、cap=4000ms、jitterなし）。
@@ -247,3 +278,25 @@ When embedding this app or deploying under strict CSP, ensure:
   - `connect-src 'self' ws: wss:`
 
 Local development often needs a permissive CSP; tighten in production and test thoroughly prior to rollout.
+
+## Ping / Fast Ping and Counters
+
+- 一回だけのPing: Connectionタブの「Ping」ボタンは `method: "ping"` のJSON‑RPCリクエストを1回送信します。
+- 高頻度Ping: 「Fast JSON‑RPC Ping (100ms)」をONにすると、実WS接続中に100ms毎で `method: "ping"` を送信します（Dummy Mode時はUI上ON可能ですが送信は行いません）。
+
+### カウンタの意味と表示場所
+
+- 定義（`lib/ping-stats.ts`）
+  - `Pings`（totalPings）: 送信した `method:"ping"` の件数（`requestId` を持つ sent メッセージをカウント）
+  - `Matched`（matched）: 同じ `id` を持つ受信メッセージが存在した件数（レスポンス＝pong とみなす）
+  - `Missing`（missing）: `Pings - Matched`（未返答のPing数）
+
+- 表示場所
+  - Connectionパネル（折りたたみ時）: バッジ `Ping matched/total`（ツールチップで説明表示）
+  - Connectionパネル（展開時）: 見出し行の右側に `matched/total` と `missing`（行全体にツールチップ）
+  - Performanceタブ: 「Ping / Pong」カード（同じ定義の数値を表示、タイトルにツールチップ）
+
+- E2E
+  - `e2e/ping-stats.spec.ts`: 「Ping」ボタンで `matched/total` が `1/1` になり `missing=0` になること、折りたたみ時のバッジ表示を検証
+  - `e2e/fast-ping-badge.spec.ts`: Fast PingをONにして折りたたみバッジとツールチップ表示を検証
+  - `e2e/fast-ping-realws.spec.ts`（任意）: 実WSでFast PingのON/OFFによる `Pings` の増減（停止）を検証（`E2E_REAL_WS_URL` 必須）

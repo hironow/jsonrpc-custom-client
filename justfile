@@ -26,3 +26,7 @@ lint:
 e2e:
     pnpm playwright:install
     pnpm run test:e2e
+
+# Run E2E against local real WebSocket server
+e2e-real ws_url='ws://localhost:9999/ws':
+    E2E_REAL_WS_URL={{ws_url}} pnpm run test:e2e
