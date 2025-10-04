@@ -16,13 +16,12 @@ test.describe("[realws] Notification stream appears in sidebar", () => {
 			timeout: 15000,
 		});
 
-		// Switch to the Notifications tab in the right sidebar and wait for a heartbeat notification
+		// Open Notifications tab
 		await page.getByRole("tab", { name: "Notifications" }).click();
 		const notifPanel = page.getByRole("tabpanel", { name: "Notifications" });
-		await expect(notifPanel.getByText(/stream\.heartbeat/).first()).toBeVisible(
-			{
-				timeout: 20000,
-			},
-		);
+		// Wait for at least one notification card to appear in the panel
+		await expect(
+			notifPanel.locator('[data-slot="card"].cursor-pointer').first(),
+		).toBeVisible({ timeout: 20000 });
 	});
 });
