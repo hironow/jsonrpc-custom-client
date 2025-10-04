@@ -288,11 +288,11 @@ export function MessageList({
 					<Button
 						variant="ghost"
 						size="sm"
-						aria-label="Preset: Clear"
+						aria-label="Preset: Reset"
 						className="h-6 text-[11px] px-2"
 						onClick={() => setPresetQuickFilter(undefined)}
 					>
-						Clear Preset
+						Reset Preset
 					</Button>
 				</div>
 

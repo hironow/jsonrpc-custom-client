@@ -100,7 +100,7 @@ describe("MessageList quick filter presets (UI)", () => {
 		expect(getAllTabText()).toMatch(/All\s*1/);
 
 		// Clear preset restores totals
-		fireEvent.click(screen.getByRole("button", { name: /Preset: Clear/ }));
+		fireEvent.click(screen.getByRole("button", { name: /Preset: Reset/ }));
 		expect(getAllTabText()).toMatch(/All\s*4/);
 	});
 });
