@@ -41,7 +41,7 @@ function PingHarness({ timer, wsFactory }: any) {
 	);
 }
 
-describe("useWebSocketClient sendPing (JSON-RPC method 'ping')", () => {
+describe("useWebSocketClient sendPing (JSONRPC method 'ping')", () => {
 	beforeEach(() => {
 		if (!global.crypto) {
 			// @ts-ignore
@@ -51,7 +51,7 @@ describe("useWebSocketClient sendPing (JSON-RPC method 'ping')", () => {
 		global.crypto.randomUUID = () => "uuid-test";
 	});
 
-	it("sends a JSON-RPC request with method 'ping' when connected", async () => {
+	it("sends a JSONRPC request with method 'ping' when connected", async () => {
 		await withFakeTimers(async (timer) => {
 			const sockets: FakeWS[] = [];
 			const wsFactory = vi.fn(() => {

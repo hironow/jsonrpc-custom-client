@@ -1,4 +1,4 @@
-# JSON-RPC WebSocket Client – Notes for Contributors
+# JSONRPC WebSocket Client – Notes for Contributors
 
 This project is a Next.js + React UI to explore JSON‑RPC over WebSocket. The codebase follows a Tidy First → Tests development style. This document captures validator strictness, current boundaries, and guidance for future work.
 
@@ -84,7 +84,7 @@ Playwright を使ったE2Eテストを同梱し、CIでも実行しています�
   - 例（Windows PowerShell）: `$env:E2E_REAL_WS_URL="wss://your-server.example/ws"`
 - 実行: `pnpm test:e2e`（またはローカルサーバの場合 `pnpm test:e2e:real` / `just e2e-real`）
 - 対象: `e2e/fast-ping-realws.spec.ts`
-- 振る舞い: 接続後に「Fast JSON-RPC Ping (100ms)」をON→`Ping`総数が増えることを確認→OFF→一定時間後も総数が増えないことを確認
+- 振る舞い: 接続後に「Fast JSONRPC Ping (100ms)」をON→`Ping`総数が増えることを確認→OFF→一定時間後も総数が増えないことを確認
 
 注: Dummy ModeのままでもUI上はトグル可能ですが、100ms送信は実WS接続時のみ動作します（E2Eのため）。
 
@@ -241,7 +241,7 @@ The message list uses `@tanstack/react-virtual` to render only visible rows.
 The Message list header provides simple, one-click presets to quickly narrow the view:
 
 - Method:user — filters by method substring (case-insensitive contains)
-- ID:1 — filters by an exact match against any JSON-RPC id (including batch items and `Message.requestId`)
+- ID:1 — filters by an exact match against any JSONRPC id (including batch items and `Message.requestId`)
 - Text:error — filters by payload substring (case-insensitive contains over the JSON string)
 - Reset Preset — clears the preset filter
 

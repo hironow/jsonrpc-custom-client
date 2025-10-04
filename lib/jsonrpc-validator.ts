@@ -1,4 +1,4 @@
-// JSON-RPC 2.0 Specification Validator
+// JSONRPC 2.0 Specification Validator
 
 export interface ValidationResult {
 	isValid: boolean;
@@ -101,7 +101,7 @@ function validateResponse(
 				errors.push('"error.message" must be a string');
 			}
 
-			// Reserved code range warnings according to JSON-RPC 2.0
+			// Reserved code range warnings according to JSONRPC 2.0
 			const code = data.error.code;
 			if (typeof code === "number" && Number.isInteger(code)) {
 				// -32099..-32000 reserved for server error (implementation-defined)

@@ -110,7 +110,7 @@
         <title>tests/runn/ DIRS' SETTINGS GUIDELINES</title>
         <reference url="https://deepwiki.com/k1LoW/runn">Based on runn for scenario-based testing</reference>
         <guideline>Scenarios are realistic and don't require same coverage as unit/integration tests</guideline>
-        <guideline>A2A protocol compliance with JSON-RPC specification</guideline>
+        <guideline>A2A protocol compliance with JSONRPC specification</guideline>
         <guideline>Scenario tests should describe AI Agent actions from Agent perspective</guideline>
     </runn-settings>
 

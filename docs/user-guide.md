@@ -1,4 +1,4 @@
-# JSON-RPC WebSocket クライアント 使い方ガイド
+# JSONRPC WebSocket クライアント 使い方ガイド
 
 このドキュメントは、アプリの画面操作で JSON‑RPC 2.0 over WebSocket を扱うための実用的な使い方をまとめたものです。開発者向けの詳細仕様やテストについてはリポジトリの README を参照してください。
 

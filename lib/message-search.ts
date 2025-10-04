@@ -47,7 +47,7 @@ export function matchesQuickFilter(
 		if (!m || !toLower(m).includes(toLower(filter.method))) return false;
 	}
 
-	// id exact match against any JSON-RPC id/requestId
+	// id exact match against any JSONRPC id/requestId
 	if (filter.id !== undefined && String(filter.id).trim() !== "") {
 		const ids = getJsonRpcIds(msg);
 		if (!ids.includes(String(filter.id))) return false;

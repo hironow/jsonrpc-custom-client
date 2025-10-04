@@ -343,7 +343,7 @@ export function useWebSocketClient(options?: {
 	};
 
 	const sendPing = () => {
-		// Convenience method for JSON-RPC ping
+		// Convenience method for JSONRPC ping
 		sendMessage("ping", {});
 	};
 

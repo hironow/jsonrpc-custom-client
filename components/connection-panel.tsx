@@ -232,11 +232,11 @@ export function ConnectionPanel({
 							htmlFor="fast-ping"
 							className="text-xs font-medium cursor-pointer"
 						>
-							Fast JSON-RPC Ping ({fastPingIntervalMs ?? 100}ms)
+							Fast JSONRPC Ping ({fastPingIntervalMs ?? 100}ms)
 						</Label>
 					</div>
 
-					{/* One-shot JSON-RPC ping */}
+					{/* One-shot JSONRPC ping */}
 					<div className="flex items-center justify-end">
 						<Button
 							variant="outline"

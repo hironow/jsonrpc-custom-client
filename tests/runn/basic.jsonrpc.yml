@@ -1,4 +1,4 @@
-# Scenario: Basic JSON-RPC request/response over WebSocket (Agent perspective)
+# Scenario: Basic JSONRPC request/response over WebSocket (Agent perspective)
 # Note: This is a non-executable scaffold to outline intended flows with runn.
 
 version: "1"
@@ -14,7 +14,7 @@ steps:
         url: "{{ ws_url }}"
 
   - name: send-request
-    desc: Agent sends a JSON-RPC 2.0 request {method:"ping",id:1}
+    desc: Agent sends a JSONRPC 2.0 request {method:"ping",id:1}
     ws:
       send:
         json:
@@ -39,4 +39,3 @@ steps:
     desc: Agent closes the connection
     ws:
       close: {}
-

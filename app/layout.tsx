@@ -5,8 +5,9 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-	title: "v0 App",
-	description: "Created with v0",
+	title: "JSONRPC Custom Client",
+	description:
+		"A custom client for JSONRPC APIs with support for multiple endpoints, authentication, and request history.",
 	generator: "v0.app",
 };
 

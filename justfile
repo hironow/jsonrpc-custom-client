@@ -47,7 +47,7 @@ e2e-real ws_url='ws://localhost:9191/ws':
         echo "Go not found (required to run local WS server)." >&2
         exit 1
       fi
-      echo "Starting local WS JSON-RPC server at :9191 ..."
+      echo "Starting local WS JSONRPC server at :9191 ..."
       mkdir -p scripts/ws-jsonrpc-server/logs
       (
         cd scripts/ws-jsonrpc-server && \

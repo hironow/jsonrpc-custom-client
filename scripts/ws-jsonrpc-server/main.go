@@ -197,7 +197,7 @@ func main() {
 		_, _ = fmt.Fprintln(w, "OK")
 	})
 
-	log.Printf("JSON-RPC WS server listening on ws://localhost%s%s\n", *addr, *path)
+	log.Printf("JSONRPC WS server listening on ws://localhost%s%s\n", *addr, *path)
 	if err := http.ListenAndServe(*addr, mux); err != nil {
 		log.Fatal(err)
 	}
