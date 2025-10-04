@@ -20,9 +20,11 @@ test.describe("[realws] Notification stream appears in sidebar", () => {
 		await page.getByRole("tab", { name: "Notifications" }).click();
 		const panel = page.getByTestId("notifications-panel");
 		await expect(panel).toBeVisible();
-		// Wait until at least one notification item exists (not relying on visibility)
+		// Wait until at least one notification item exists (real WS can be slower locally)
 		await expect
-			.poll(async () => await panel.getByTestId("notification-item").count())
+			.poll(async () => await panel.getByTestId("notification-item").count(), {
+				timeout: 20000,
+			})
 			.toBeGreaterThan(0);
 	});
 });
