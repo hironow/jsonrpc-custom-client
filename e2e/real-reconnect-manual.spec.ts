@@ -2,10 +2,10 @@ import { test, expect } from "@playwright/test";
 
 const REAL_URL = process.env.E2E_REAL_WS_URL;
 
-test.describe("[realws] Notification stream appears in sidebar", () => {
+test.describe("[realws] Manual disconnect and reconnect", () => {
 	test.skip(!REAL_URL, "Set E2E_REAL_WS_URL to run this test.");
 
-	test("receive periodic stream.* notifications", async ({ page }) => {
+	test("disconnect then connect again shows stable UI", async ({ page }) => {
 		await page.goto("/");
 		await expect(page.getByText("JSONRPC WebSocket")).toBeVisible();
 
@@ -16,10 +16,15 @@ test.describe("[realws] Notification stream appears in sidebar", () => {
 			timeout: 15000,
 		});
 
-		// Open Notifications panel from header and wait for entries
-		await page.getByRole("button", { name: "Notifications" }).click();
-		// Wait until "No notifications yet" disappears, indicating at least one arrived
-		await expect(page.getByText("No notifications yet")).toBeHidden({
+		// Disconnect -> expect Connect to appear again
+		await page.getByRole("button", { name: "Disconnect" }).click();
+		await expect(page.getByRole("button", { name: /^Connect$/ })).toBeVisible({
+			timeout: 10000,
+		});
+
+		// Connect again -> expect Disconnect
+		await page.getByRole("button", { name: /^Connect$/ }).click();
+		await expect(page.getByRole("button", { name: "Disconnect" })).toBeVisible({
 			timeout: 15000,
 		});
 	});
