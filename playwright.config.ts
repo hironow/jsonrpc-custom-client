@@ -9,12 +9,13 @@ export default defineConfig({
 		headless: true,
 		trace: "on-first-retry",
 	},
-	webServer: {
-		command: "pnpm dev",
-		url: "http://localhost:3000",
-		reuseExistingServer: true,
-		timeout: 120_000,
-	},
+  webServer: {
+    command: "pnpm dev",
+    url: "http://localhost:3000",
+    reuseExistingServer: true,
+    timeout: 120_000,
+    env: { NEXT_PUBLIC_E2E: "1" },
+  },
 	projects: [
 		{
 			name: "chromium",

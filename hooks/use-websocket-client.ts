@@ -9,7 +9,7 @@ import {
 	pushWithLimitWithOptions,
 	trimToLimitWithOptions,
 } from "@/lib/message-buffer";
-import { matchBatchResponse } from "@/lib/batch-match";
+import { processIncomingMessage } from "@/lib/ws-message-processor";
 
 type TimerLike = {
 	setTimeout: (fn: (...args: any[]) => void, ms?: number) => any;
@@ -198,100 +198,16 @@ export function useWebSocketClient(options?: {
 
 			ws.onmessage = (event) => {
 				try {
-					const data = JSON.parse(event.data);
-					if (Array.isArray(data)) {
-						const responseIds = data
-							.map((item: any) =>
-								item && typeof item === "object" ? item.id : undefined,
-							)
-							.filter((id: any) => typeof id === "number") as number[];
-
-						const now = timer.now ? timer.now() : Date.now();
-						const { linkedBatchId, responseTime } = matchBatchResponse(
-							pendingBatchesRef.current,
-							responseIds,
-							now,
-							{ mode: "all" },
-						);
-						if (linkedBatchId) {
-							setMessages((prev) =>
-								prev.map((m) =>
-									m.id === linkedBatchId ? { ...m, isPending: false } : m,
-								),
-							);
-							pendingBatchesRef.current.delete(linkedBatchId);
-						}
-
-						const responseMsgId = crypto.randomUUID();
-						if (linkedBatchId) {
-							setMessages((prev) =>
-								prev.map((m) =>
-									m.id === linkedBatchId
-										? { ...m, linkedMessageId: responseMsgId }
-										: m,
-								),
-							);
-						}
-						addMessage(
-							{
-								type: "received",
-								data,
-								method: "batch.response",
-								isBatch: true,
-								batchSize: data.length,
-								responseTime,
-								linkedMessageId: linkedBatchId,
-							},
-							responseMsgId,
-						);
-						return;
-					}
-
-					const hasId =
-						typeof data === "object" &&
-						data !== null &&
-						Object.prototype.hasOwnProperty.call(data, "id");
-					const requestId = hasId ? (data as any).id : undefined;
-					const isNotification =
-						!hasId && typeof (data as any)?.method === "string";
-
-					if (
-						requestId !== undefined &&
-						pendingRequestsRef.current.has(requestId)
-					) {
-						const pending = pendingRequestsRef.current.get(requestId)!;
-						const now = timer.now ? timer.now() : Date.now();
-						const responseTime = now - pending.timestamp;
-						setMessages((prev) =>
-							prev.map((msg) =>
-								msg.id === pending.messageId
-									? { ...msg, isPending: false }
-									: msg,
-							),
-						);
-						addMessage({
-							type: "received",
-							data,
-							method: data.method || "response",
-							requestId,
-							responseTime,
-						});
-						pendingRequestsRef.current.delete(requestId);
-					} else {
-						const methodLabel =
-							typeof (data as any)?.method === "string"
-								? (data as any).method
-								: (data as any).result !== undefined ||
-										(data as any).error !== undefined
-									? "response"
-									: "notification";
-						addMessage({
-							type: "received",
-							data,
-							method: methodLabel,
-							isNotification,
-						});
-					}
+					const parsed = JSON.parse(event.data);
+					const now = timer.now ? timer.now() : Date.now();
+					processIncomingMessage(parsed, {
+						now,
+						uuid: () => crypto.randomUUID(),
+						addMessage,
+						setMessages,
+						pendingRequests: pendingRequestsRef.current,
+						pendingBatches: pendingBatchesRef.current,
+					});
 				} catch (error) {
 					addMessage({ type: "received", data: event.data });
 				}
