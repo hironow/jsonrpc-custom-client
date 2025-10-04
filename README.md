@@ -71,6 +71,7 @@ Playwright を使ったE2Eテストを同梱し、CIでも実行しています�
 - 実行: `pnpm test:e2e`（または `just e2e`）
 
 構成:
+
 - `playwright.config.ts` は Next 開発サーバを `webServer.command: pnpm dev` で自動起動します。
 - サンプル: `e2e/basic.spec.ts` はトップページ表示→Dummy Mode→Connect→Connected表示までを検証します（バックエンド不要）。
 - 追加: `e2e/devtools-analog.spec.ts` は DevTools 相当の操作（入力/クリック/ダイアログ/ファイルアップロード/タイトル）を単一ページ上で検証します。
@@ -95,14 +96,15 @@ Playwright を使ったE2Eテストを同梱し、CIでも実行しています�
 - 配置: `scripts/ws-jsonrpc-server`（`go.mod` 同梱、依存: `github.com/gorilla/websocket`）
 - 起動例:
   - `cd scripts/ws-jsonrpc-server`
-  - `go run . --addr :9191 --path /ws`
-- 接続URL: `ws://localhost:9191/ws`
+  - `go run . --addr :9999 --path /ws`
+- 接続URL: `ws://localhost:9999/ws`
 - 使い方（E2E）:
   - 別ターミナルで Next dev を起動: `pnpm dev`
-  - 本READMEの上記URLを環境変数に: `export E2E_REAL_WS_URL=ws://localhost:9191/ws`
+  - 本READMEの上記URLを環境変数に: `export E2E_REAL_WS_URL=ws://localhost:9999/ws`
   - E2E実行: `pnpm test:e2e` もしくは `pnpm test:e2e:real`（または `just e2e-real`）
 
 対応メソッド:
+
 - `ping` → `{"jsonrpc":"2.0","result":{"pong":true},"id":<same>}` を返却
 - Batch も処理します（通知はレスポンス無し）
 
@@ -178,7 +180,6 @@ export function DemoClient() {
 }
 ```
 
-
 ## Development Style
 
 - Tidy First → Tests: extract logic and add tests before modifying behavior.
@@ -209,14 +210,17 @@ The buffer trimming policy is configurable to better fit your stream characteris
   - When a forced drop is necessary (e.g., too many preferred messages at the front), remove this many messages per iteration from the front. Never drops below the configured limit.
 
 How trimming works (conceptually):
+
 1) Compute how many items exceed `limit` (toDrop).
 2) Walk from the front, skipping “preferred” items (based on the options) and remove the first non‑preferred until `toDrop` is satisfied or no non‑preferred remain.
 3) If the buffer still exceeds `limit`, apply a forced front‑drop in chunks of `dropChunkSize` until length ≤ `limit`.
 
 Runtime control (UI):
+
 - Performance → Settings: toggle “Prefer Pending”, toggle “Prefer Batches”, and set “Drop Chunk Size”. Changes apply immediately; if the buffer is over limit when changing options, it is trimmed to comply.
 
 Programmatic control (hook):
+
 - `useWebSocketClient()` exposes and applies these options:
   - `bufferPreferPending`, `setBufferPreferPending`
   - `bufferPreferBatches`, `setBufferPreferBatches`
@@ -224,6 +228,7 @@ Programmatic control (hook):
   - The hook uses `pushWithLimitWithOptions` for inserts and `trimToLimitWithOptions` when the limit or options change.
 
 Backwards compatibility:
+
 - Defaults preserve the prior behavior (pending preferred, batches not preferred, forced drop of one at a time).
 
 ### List Virtualization
@@ -246,6 +251,7 @@ The Message list header provides simple, one-click presets to quickly narrow the
 - Reset Preset — clears the preset filter
 
 Notes:
+
 - Presets combine with any `quickFilter` prop supplied to `MessageList` (merged semantics).
 - The top counts (All/Sent/Recv/Notif/Err) reflect the filtered set, not the raw message buffer.
 - See logic in `lib/message-search.ts`; UI wiring in `components/message-list.tsx`.
@@ -262,7 +268,6 @@ The “Export” button in the Message list header exports only the currently fi
     - Value is sanitized: lowercased, non-alphanumeric collapsed to `-`, trim repeated dashes
     - When multiple quick filter fields exist, precedence is `method > id > text`
 - Unit tests: `tests/export-filtered-view.test.tsx`
-
 
 ## Security: Content Security Policy (CSP)
 
