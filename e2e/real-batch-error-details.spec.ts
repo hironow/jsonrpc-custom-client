@@ -32,17 +32,17 @@ test.describe("[realws] Batch error details", () => {
 		// Open the batch response details (click the preview badge text)
 		await page.getByText(/✗\s*1/).first().click();
 
-		// Details should include Error with JSON having code -32601 and message
-		await expect(page.getByText(/Error/)).toBeVisible();
+		// Details should include Error heading and JSON having code -32601 and message
+		await expect(page.getByRole("heading", { name: /^Error$/ })).toBeVisible();
 		await expect(page.getByText(/-32601/)).toBeVisible();
 		await expect(page.getByText(/Method not found/)).toBeVisible();
 
-		// And also include a Result section for the successful ping (ok: true)
+		// And also include a Result section for the successful ping (pong: true)
 		await expect(page.getByText(/Result/)).toBeVisible();
-		await expect(page.getByText(/"ok"\s*:\s*true/)).toBeVisible();
+		await expect(page.getByText(/"pong"\s*:\s*true/)).toBeVisible();
 
 		// Response Time indicator should be present somewhere in details
-		await expect(page.getByText(/Response\s*Time/)).toBeVisible();
-		await expect(page.getByText(/ms/)).toBeVisible();
+		await expect(page.locator("text=Response Time").first()).toBeVisible();
+		await expect(page.getByText(/ms/).first()).toBeVisible();
 	});
 });

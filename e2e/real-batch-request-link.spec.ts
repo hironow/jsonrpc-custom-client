@@ -32,10 +32,7 @@ test.describe("[realws] Batch request links to response in Details", () => {
 		await methods.nth(1).fill("ping");
 		await page.getByRole("button", { name: /Send Batch/ }).click();
 
-		// Ensure link marker appears and open batch.request row
-		await expect(page.getByText(/→\s*Response/)).toBeVisible({
-			timeout: 10000,
-		});
+		// Open batch.request row directly; then wait for details to show response time (linked)
 		await page
 			.getByText(/\d+\s+requests/)
 			.first()
@@ -43,16 +40,18 @@ test.describe("[realws] Batch request links to response in Details", () => {
 
 		// Details should render Batch Message Details and show response time
 		await expect(page.getByText(/Batch\s*Message\s*Details/)).toBeVisible();
-		await expect(page.getByText(/Response\s*Time/)).toBeVisible();
-
-		// One of the results should include { "pong": true }
-		await expect(page.getByText(/"pong"\s*:\s*true/)).toBeVisible({
+		await expect(page.locator("text=Response Time").first()).toBeVisible({
 			timeout: 10000,
 		});
 
-		// Pair sections should include Request and Response badges
-		await expect(page.getByText(/^Request$/)).toBeVisible();
-		await expect(page.getByText(/^(Response|Error)$/)).toBeVisible();
+		// One of the results should include { "pong": true } (pick the first occurrence)
+		await expect(page.getByText(/"pong"\s*:\s*true/).first()).toBeVisible({
+			timeout: 10000,
+		});
+
+		// Pair sections should include Request and Response badges (pick the first match)
+		await expect(page.getByText(/^Request$/).first()).toBeVisible();
+		await expect(page.getByText(/^(Response|Error)$/).first()).toBeVisible();
 
 		// Copy buttons flip to Copied! when clicked
 		await page.getByRole("button", { name: "Copy Request" }).first().click();

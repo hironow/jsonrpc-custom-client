@@ -45,17 +45,16 @@ test.describe("[realws] Export includes error entries", () => {
 		// Read and inspect exported JSON
 		const text = readFileSync(out, "utf-8");
 		const arr = JSON.parse(text);
-		// Look for a received message whose data.error.code === -32601
+		// Look for an error -32601 either in a single response or any batch item
 		const hasMethodNotFound =
 			Array.isArray(arr) &&
 			arr.some((m) => {
 				const d = m?.data;
-				return (
-					m?.type === "received" &&
-					d &&
-					typeof d === "object" &&
-					d.error?.code === -32601
-				);
+				if (m?.type !== "received" || !d) return false;
+				if (Array.isArray(d)) {
+					return d.some((it) => it?.error?.code === -32601);
+				}
+				return typeof d === "object" && d.error?.code === -32601;
 			});
 		expect(hasMethodNotFound).toBe(true);
 
