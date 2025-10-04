@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install just (rust-just via pipx)
+        run: pipx install rust-just
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -50,38 +53,12 @@ jobs:
         if: steps.playwright-browsers-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
 
-      - name: Type check
-        run: pnpm tsc --noEmit
-
-      - name: Unit tests
-        run: pnpm test:unit
+      - name: Type check + Unit tests (just)
+        run: just test-ci
 
 
-      - name: E2E tests (with local Go WS server)
-        shell: bash
-        run: |
-          set -euo pipefail
-          pushd scripts/ws-jsonrpc-server >/dev/null
-          go mod download
-          nohup go run . --addr :9999 --path /ws > server.log 2>&1 &
-          srv_pid=$!
-          popd >/dev/null
-          # wait for port 9999 to be ready (max ~10s)
-          for i in {1..50}; do
-            if bash -lc 'exec 3<>/dev/tcp/127.0.0.1/9999' 2>/dev/null; then
-              echo "WS server is up."
-              break
-            fi
-            sleep 0.2
-          done
-          set +e
-          E2E_REAL_WS_URL=ws://localhost:9999/ws pnpm test:e2e
-          status=$?
-          set -e
-          echo "Stopping WS server (pid $srv_pid)"
-          kill "$srv_pid" >/dev/null 2>&1 || true
-          wait "$srv_pid" >/dev/null 2>&1 || true
-          exit $status
+      - name: E2E tests (just e2e-real)
+        run: just e2e-real
 
       - name: Build
         run: pnpm build

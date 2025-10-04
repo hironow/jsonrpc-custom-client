@@ -32,23 +32,30 @@ e2e-real ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash
     set -euo pipefail
     started=0
-    if ! : >/dev/tcp/127.0.0.1/9999 2>/dev/null; then
+    port_open() {
+      if command -v nc >/dev/null 2>&1; then
+        nc -z 127.0.0.1 9999 >/dev/null 2>&1
+      else
+        (echo >/dev/tcp/127.0.0.1/9999) >/dev/null 2>&1 || return 1
+      fi
+    }
+    if ! port_open; then
       if ! command -v go >/dev/null 2>&1; then
         echo "Go not found (required to run local WS server)." >&2
         exit 1
       fi
       echo "Starting local WS JSON-RPC server at :9999 ..."
       mkdir -p scripts/ws-jsonrpc-server/logs
-      (cd scripts/ws-jsonrpc-server && go run . --addr :9999 --path /ws) > scripts/ws-jsonrpc-server/logs/server.log 2>&1 &
+      (cd scripts/ws-jsonrpc-server && go mod download && go build -o server . && ./server --addr :9999 --path /ws) > scripts/ws-jsonrpc-server/logs/server.log 2>&1 &
       srv_pid=$!
       started=1
-      # Wait until port is open (max ~10s)
-      for i in {1..50}; do
-        if : >/dev/tcp/127.0.0.1/9999 2>/dev/null; then
+      # Wait until port is open (max ~30s)
+      for i in {1..60}; do
+        if port_open; then
           echo "WS server is up."
           break
         fi
-        sleep 0.2
+        sleep 0.5
       done
     fi
     set +e
