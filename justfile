@@ -16,7 +16,7 @@ test-ci:
 
 # Format the codebase with Biome
 format:
-    pnpm exec biome format --write .
+    pnpm exec biome format --write app components hooks lib tests types docs e2e styles
 
 # Lint the codebase (ESLint via Next)
 lint:

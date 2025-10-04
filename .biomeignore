@@ -1,0 +1,7 @@
+.next
+.next/**
+dist
+build
+coverage
+out
+node_modules

@@ -9,6 +9,16 @@
 		"jsxQuoteStyle": "double"
 	},
 	"files": {
-		"ignore": ["node_modules", ".next", "coverage", "dist", "build"]
+		"ignore": [
+			"node_modules",
+			".next",
+			".next/**",
+			"**/.next/**",
+			"coverage",
+			"dist",
+			"build",
+			"out"
+		],
+		"maxSize": 6291456
 	}
 }
