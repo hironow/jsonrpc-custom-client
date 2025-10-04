@@ -62,17 +62,18 @@ Scenario tests under `tests/runn/` describe realistic agent flows (A2A) using JS
 
 ### E2E Tests
 
-Playwright を使ったE2Eテストのスキャフォールドを同梱しています（CIでは未実行）。
+Playwright を使ったE2Eテストを同梱し、CIでも実行しています。
 
 - 依存関係のセットアップ（初回のみ）
   - `pnpm install`
   - `pnpm playwright:install`
 
-- 実行: `pnpm test:e2e`
+- 実行: `pnpm test:e2e`（または `just e2e`）
 
 構成:
 - `playwright.config.ts` は Next 開発サーバを `webServer.command: pnpm dev` で自動起動します。
 - サンプル: `e2e/basic.spec.ts` はトップページ表示→Dummy Mode→Connect→Connected表示までを検証します（バックエンド不要）。
+- 追加: `e2e/devtools-analog.spec.ts` は DevTools 相当の操作（入力/クリック/ダイアログ/ファイルアップロード/タイトル）を単一ページ上で検証します。
 
 ## Development Style
 

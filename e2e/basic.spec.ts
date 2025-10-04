@@ -6,6 +6,8 @@ test("loads home and connects in Dummy Mode", async ({ page }) => {
 
 	await page.getByLabel("Dummy Mode").click();
 	await page.getByRole("button", { name: /Connect/ }).click();
-	await expect(page.getByText(/Connecting/)).toBeVisible();
+	// Disambiguate: the text "Connecting" appears in a badge and on the disabled button.
+	// Assert the button state to avoid strict-mode ambiguity.
+	await expect(page.getByRole("button", { name: /Connecting/ })).toBeVisible();
 	await expect(page.getByText(/Connected/)).toBeVisible();
 });

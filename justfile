@@ -21,3 +21,8 @@ format:
 # Lint the codebase (ESLint via Next)
 lint:
     pnpm lint
+
+# Run local E2E smoke tests
+e2e:
+    pnpm playwright:install
+    pnpm test:e2e

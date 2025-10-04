@@ -35,3 +35,8 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Install Playwright browsers
+        uses: microsoft/playwright-github-action@v1
+
+      - name: E2E tests
+        run: pnpm test:e2e
