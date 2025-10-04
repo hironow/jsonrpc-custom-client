@@ -29,6 +29,9 @@ type ConnectionPanelProps = {
 	fastPingEnabled?: boolean;
 	onFastPingChange?: (enabled: boolean) => void;
 	onPing?: () => void;
+	pingTotal?: number;
+	pingMatched?: number;
+	pingMissing?: number;
 };
 
 export function ConnectionPanel({
@@ -42,6 +45,9 @@ export function ConnectionPanel({
 	fastPingEnabled,
 	onFastPingChange,
 	onPing,
+	pingTotal,
+	pingMatched,
+	pingMissing,
 }: ConnectionPanelProps) {
 	const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -117,6 +123,16 @@ export function ConnectionPanel({
 								Fast Ping
 							</Badge>
 						)}
+						{typeof pingTotal === "number" &&
+							typeof pingMatched === "number" && (
+								<Badge
+									variant="outline"
+									className="text-[10px]"
+									data-testid="badge-ping-collapsed"
+								>
+									Ping {pingMatched}/{pingTotal}
+								</Badge>
+							)}
 					</div>
 					<div className="flex items-center gap-2">
 						<Button
@@ -132,6 +148,7 @@ export function ConnectionPanel({
 							variant="ghost"
 							size="sm"
 							className="h-7 w-7 p-0 shrink-0"
+							aria-label="Expand Connection Panel"
 						>
 							<ChevronDown className="w-4 h-4" />
 						</Button>
@@ -153,6 +170,7 @@ export function ConnectionPanel({
 							variant="ghost"
 							size="sm"
 							className="h-6 w-6 p-0"
+							aria-label="Collapse Connection Panel"
 						>
 							<ChevronUp className="w-4 h-4" />
 						</Button>
@@ -197,7 +215,7 @@ export function ConnectionPanel({
 							variant="outline"
 							size="sm"
 							onClick={onPing}
-							disabled={status !== "connected" || dummyMode}
+							disabled={status !== "connected"}
 							className="h-7 text-xs"
 						>
 							Ping
@@ -210,6 +228,24 @@ export function ConnectionPanel({
 						disabled={status !== "connected" || dummyMode}
 					/>
 				</div>
+
+				{typeof pingTotal === "number" && typeof pingMatched === "number" && (
+					<div
+						className="flex items-center justify-between px-2"
+						data-testid="ping-inline"
+					>
+						<div className="text-xs text-muted-foreground">Ping</div>
+						<div className="text-xs font-mono text-foreground">
+							<span data-testid="ping-inline-matched">{pingMatched}</span>/
+							<span data-testid="ping-inline-total">{pingTotal}</span>
+							{typeof pingMissing === "number" && (
+								<span className="ml-2" data-testid="ping-inline-missing">
+									missing {pingMissing}
+								</span>
+							)}
+						</div>
+					</div>
+				)}
 
 				{dummyMode && (
 					<div className="p-2 rounded bg-primary/10 border border-primary/20">
