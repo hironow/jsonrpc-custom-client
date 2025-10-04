@@ -31,6 +31,7 @@ function ReconnectProbe({ timer, wsFactory }: any) {
 		timer,
 		wsFactory,
 	});
+});
 	return (
 		<div>
 			<div data-testid="status">{status}</div>
