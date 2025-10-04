@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
-import { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +58,9 @@ export function MessageList({
 	const [filter, setFilter] = useState<
 		"all" | "sent" | "received" | "error" | "notification"
 	>("all");
+	const [presetQuickFilter, setPresetQuickFilter] = useState<
+		QuickFilter | undefined
+	>(undefined);
 	const [scrollIndicator, setScrollIndicator] = useState<string | null>(null);
 	const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -96,10 +97,16 @@ export function MessageList({
 		}, 1000);
 	};
 
-	const filteredMessages = filterMessagesByQuickFilter(
+	const effectiveQuickFilter: QuickFilter | undefined = useMemo(() => {
+		return { ...(quickFilter ?? {}), ...(presetQuickFilter ?? {}) };
+	}, [quickFilter, presetQuickFilter]);
+
+	const baseQuickFiltered = filterMessagesByQuickFilter(
 		messages,
-		quickFilter,
-	).filter((msg) => {
+		effectiveQuickFilter,
+	);
+
+	const filteredMessages = baseQuickFiltered.filter((msg) => {
 		if (filter === "all") return true;
 		if (filter === "notification") return msg.isNotification === true;
 		return msg.type === filter;
@@ -140,17 +147,41 @@ export function MessageList({
 		}
 	});
 
+	const sanitize = (s: string) =>
+		s
+			.toLowerCase()
+			.replace(/[^a-z0-9-_]+/g, "-")
+			.replace(/-+/g, "-")
+			.replace(/^-+|-+$/g, "");
+
 	const handleExport = () => {
-		if (messages.length === 0) return;
-		const json = serializeMessages(messages);
+		if (baseQuickFiltered.length === 0) return;
+		const json = serializeMessages(baseQuickFiltered);
 		const blob = new Blob([json], { type: "application/json" });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		const ts = new Date().toISOString().replace(/[:.]/g, "-");
+
+		let baseName = "messages";
+		if (
+			effectiveQuickFilter &&
+			(effectiveQuickFilter.method ||
+				effectiveQuickFilter.id !== undefined ||
+				effectiveQuickFilter.text)
+		) {
+			if (effectiveQuickFilter.method)
+				baseName = `messages-filtered-method-${sanitize(effectiveQuickFilter.method)}`;
+			else if (effectiveQuickFilter.id !== undefined)
+				baseName = `messages-filtered-id-${String(effectiveQuickFilter.id)}`;
+			else if (effectiveQuickFilter.text)
+				baseName = `messages-filtered-text-${sanitize(effectiveQuickFilter.text)}`;
+			else baseName = "messages-filtered";
+		}
+
 		a.href = url;
-		a.download = `messages-${ts}.json`;
+		a.download = `${baseName}-${ts}.json`;
 		a.click();
-		URL.revokeObjectURL(url);
+		if (typeof URL.revokeObjectURL === "function") URL.revokeObjectURL(url);
 	};
 
 	// Linking logic centralized in lib/message-link
@@ -158,11 +189,12 @@ export function MessageList({
 		findLinkedMessage(messages, message as any) as Message | null;
 
 	const stats = {
-		total: messages.length,
-		sent: messages.filter((m) => m.type === "sent").length,
-		received: messages.filter((m) => m.type === "received").length,
-		errors: messages.filter((m) => m.type === "error").length,
-		notifications: messages.filter((m) => m.isNotification === true).length,
+		total: baseQuickFiltered.length,
+		sent: baseQuickFiltered.filter((m) => m.type === "sent").length,
+		received: baseQuickFiltered.filter((m) => m.type === "received").length,
+		errors: baseQuickFiltered.filter((m) => m.type === "error").length,
+		notifications: baseQuickFiltered.filter((m) => m.isNotification === true)
+			.length,
 	};
 
 	const selectedMessage = messages.find((m) => m.id === selectedMessageId);
@@ -223,6 +255,41 @@ export function MessageList({
 							Clear
 						</Button>
 					</div>
+				</div>
+
+				<div className="flex items-center gap-1 mt-1">
+					<Button
+						variant="outline"
+						size="sm"
+						className="h-6 text-[11px] px-2"
+						onClick={() => setPresetQuickFilter({ method: "user" })}
+					>
+						Method:user
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						className="h-6 text-[11px] px-2"
+						onClick={() => setPresetQuickFilter({ id: "1" })}
+					>
+						ID:1
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						className="h-6 text-[11px] px-2"
+						onClick={() => setPresetQuickFilter({ text: "error" })}
+					>
+						Text:error
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-6 text-[11px] px-2"
+						onClick={() => setPresetQuickFilter(undefined)}
+					>
+						Reset Preset
+					</Button>
 				</div>
 
 				<Tabs

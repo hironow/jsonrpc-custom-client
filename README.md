@@ -75,6 +75,79 @@ Playwright を使ったE2Eテストを同梱し、CIでも実行しています�
 - サンプル: `e2e/basic.spec.ts` はトップページ表示→Dummy Mode→Connect→Connected表示までを検証します（バックエンド不要）。
 - 追加: `e2e/devtools-analog.spec.ts` は DevTools 相当の操作（入力/クリック/ダイアログ/ファイルアップロード/タイトル）を単一ページ上で検証します。
 
+## Reconnect Policy
+
+`hooks/use-websocket-client.ts` は自動再接続のポリシーをDI可能です。既定値のままでも後方互換の指数バックオフで動作します（base=500ms、cap=4000ms、jitterなし）。
+
+- 既定動作
+  - バックオフ: `delay = baseMs * 2^attempt`（初回 attempt=0）
+  - 上限: `maxMs` でクランプ
+  - ジッタ: なし（必要なら関数を注入）
+  - 成功で attempt リセット、`disconnect()` で予約済み再接続はキャンセル
+  - Dummy Mode 時は再接続スケジュールを行いません
+
+- オプション（DI）
+  - `baseMs?: number` 初期ディレイ（既定 500）
+  - `maxMs?: number` 遅延上限（既定 4000）
+  - `jitter?: (delayMs: number, attempt: number) => number` ジッタ関数
+
+- 使用例（テスト/埋め込み向け）
+
+```ts
+import { useWebSocketClient } from "@/hooks/use-websocket-client";
+
+export function MyClient() {
+  const { status, connect, disconnect } = useWebSocketClient({
+    reconnect: {
+      baseMs: 300,
+      maxMs: 2000,
+      jitter: (delay, attempt) => Math.min(delay + 100, 2000),
+    },
+  });
+  /* ... */
+}
+```
+
+- テスト
+  - ポリシーの単体テストは `tests/use-websocket-reconnect-policy.test.tsx` を参照。
+  - タイマー/WSはDIされ、偽タイマーで決定的に検証します。
+
+## Dummy Mode DI
+
+Dummy Mode（バックエンド不要の擬似ストリーム）は、テストやデモ用途で挙動を決定的にするための DI ポイントを提供します。
+
+- オプション（`useWebSocketClient` に渡す）
+  - `rng?: () => number`
+    - 既定: `Math.random`
+    - 分岐に使う乱数ソースを差し替えます（例: `rng: () => 0.55` なら一定確率で通知分岐に必ず入る）。
+  - `dummy?: { autoRequestIntervalMs?: number; notificationIntervalMs?: number }`
+    - `autoRequestIntervalMs` 既定 2500 — ダミーの自動リクエスト/バッチ発火の間隔
+    - `notificationIntervalMs` 既定 1500 — ダミーの通知（stream.*）発火の間隔
+
+- 実装（参照）
+  - フック: `hooks/use-websocket-client.ts`
+    - Dummy Mode の分岐 `Math.random()` を `rng()` に置換
+    - 送信・通知の `setInterval` 間隔を `dummy.*` で上書き
+  - 単体テスト: `tests/use-websocket-dummy-di.test.tsx`
+
+- 使用例
+
+```ts
+import { useWebSocketClient } from "@/hooks/use-websocket-client";
+
+export function DemoClient() {
+  const { status, connect, setDummyMode } = useWebSocketClient({
+    rng: () => 0.55, // 通知分岐に入りやすい固定値
+    dummy: {
+      notificationIntervalMs: 100,   // 通知を高速化
+      autoRequestIntervalMs: 10_000, // 自動リクエストは抑制
+    },
+  });
+  // ...
+}
+```
+
+
 ## Development Style
 
 - Tidy First → Tests: extract logic and add tests before modifying behavior.
@@ -131,6 +204,34 @@ The message list uses `@tanstack/react-virtual` to render only visible rows.
   - Base heights: 28px (header), 88px (message)
   - Heuristics: increases for large payloads, large batches, and validation issues.
 - Runtime control: In Performance → Settings, “Row Height Estimate” can be set to Heuristic or Fixed (88px). Measurement is still applied via `measureElement` to refine sizes during interaction.
+
+## Quick Filter Presets
+
+The Message list header provides simple, one-click presets to quickly narrow the view:
+
+- Method:user — filters by method substring (case-insensitive contains)
+- ID:1 — filters by an exact match against any JSON-RPC id (including batch items and `Message.requestId`)
+- Text:error — filters by payload substring (case-insensitive contains over the JSON string)
+- Reset Preset — clears the preset filter
+
+Notes:
+- Presets combine with any `quickFilter` prop supplied to `MessageList` (merged semantics).
+- The top counts (All/Sent/Recv/Notif/Err) reflect the filtered set, not the raw message buffer.
+- See logic in `lib/message-search.ts`; UI wiring in `components/message-list.tsx`.
+- Unit tests: `tests/message-list.presets.test.tsx`.
+
+## Export (Filtered View)
+
+The “Export” button in the Message list header exports only the currently filtered rows (not the entire buffer). This allows sharing exactly what you’re viewing.
+
+- Serialization: via `lib/export.ts` (ISO timestamps, reversible round-trip)
+- Filename scheme:
+  - Unfiltered: `messages-<timestamp>.json`
+  - Filtered: `messages-filtered-(method|id|text)-<value>-<timestamp>.json`
+    - Value is sanitized: lowercased, non-alphanumeric collapsed to `-`, trim repeated dashes
+    - When multiple quick filter fields exist, precedence is `method > id > text`
+- Unit tests: `tests/export-filtered-view.test.tsx`
+
 
 ## Security: Content Security Policy (CSP)
 

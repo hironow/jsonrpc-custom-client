@@ -16,13 +16,13 @@ test-ci:
 
 # Format the codebase with Biome
 format:
-    pnpm exec biome format --write app components hooks lib tests types docs e2e styles
+    pnpm run format
 
 # Lint the codebase (ESLint via Next)
 lint:
-    pnpm lint
+    pnpm run lint
 
 # Run local E2E smoke tests
 e2e:
     pnpm playwright:install
-    pnpm test:e2e
+    pnpm run test:e2e
