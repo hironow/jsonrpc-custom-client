@@ -84,3 +84,44 @@ e2e-real ws_url='ws://localhost:9191/ws':
       wait "$srv_pid" >/dev/null 2>&1 || true
     fi
     exit $status
+
+# Deploy the Go WS server to Cloud Run
+# Requires: gcloud CLI logged in; Project set (via GCP_PROJECT or gcloud config); REGION optional (default asia-northeast1 / Tokyo)
+deploy-ws-server service_name='jsonrpc-ws' region='asia-northeast1' concurrency='80' min_instances='0' max_instances='3' port='8080':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Resolve project from env or gcloud config
+    PROJECT_ID=${GCP_PROJECT:-$(gcloud config get-value project 2>/dev/null || true)}
+    if [ -z "${PROJECT_ID}" ] || [ "${PROJECT_ID}" = "(unset)" ]; then
+      echo "GCP project is not set. Set GCP_PROJECT or run: gcloud config set project <PROJECT_ID>" >&2
+      exit 1
+    fi
+    SVC={{service_name}}
+    REGION={{region}}
+    CONC={{concurrency}}
+    MIN={{min_instances}}
+    MAX={{max_instances}}
+    PORT={{port}}
+    IMAGE="gcr.io/${PROJECT_ID}/${SVC}:$(date +%Y%m%d-%H%M%S)"
+    echo "Project: ${PROJECT_ID}"
+    echo "Region : ${REGION}"
+    echo "Service: ${SVC}"
+    echo "Image  : ${IMAGE}"
+    echo "Flags  : --concurrency ${CONC} --min-instances ${MIN} --max-instances ${MAX} --port ${PORT}"
+    pushd scripts/ws-jsonrpc-server >/dev/null
+    # Build & push image using Cloud Build
+    gcloud builds submit --quiet --tag "${IMAGE}"
+    popd >/dev/null
+    # Deploy to Cloud Run (managed)
+    gcloud run deploy "${SVC}" \
+      --image "${IMAGE}" \
+      --platform managed \
+      --region "${REGION}" \
+      --allow-unauthenticated \
+      --port "${PORT}" \
+      --concurrency "${CONC}" \
+      --min-instances "${MIN}" \
+      --max-instances "${MAX}"
+    echo "-- Deployed. You can connect your client to:"
+    URL=$(gcloud run services describe "${SVC}" --region "${REGION}" --format='value(status.url)')
+    echo "   ${URL}/ws"

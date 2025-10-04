@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -182,8 +184,18 @@ func main() {
 	path := flag.String("path", "/ws", "websocket path")
 	flag.Parse()
 
+	// Allow Cloud Run/other platforms to define the listening port via $PORT
+	if p := os.Getenv("PORT"); p != "" {
+		*addr = ":" + p
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc(*path, handleWS)
+	// Simple health/root endpoint for platforms that probe '/'
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		_, _ = fmt.Fprintln(w, "OK")
+	})
 
 	log.Printf("JSON-RPC WS server listening on ws://localhost%s%s\n", *addr, *path)
 	if err := http.ListenAndServe(*addr, mux); err != nil {
