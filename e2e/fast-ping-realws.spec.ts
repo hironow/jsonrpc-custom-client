@@ -28,7 +28,12 @@ test.describe("[realws] Fast ping ON/OFF against real WS", () => {
 
 		// Wait until at least one ping has been sent
 		await expect(page.getByTestId("ping-inline-total")).not.toHaveText("0", {
-			timeout: 7000,
+			timeout: 10000,
+		});
+
+		// Also expect matched to become > 0
+		await expect(page.getByTestId("ping-inline-matched")).not.toHaveText("0", {
+			timeout: 10000,
 		});
 
 		const before = parseInt(
@@ -46,5 +51,16 @@ test.describe("[realws] Fast ping ON/OFF against real WS", () => {
 			10,
 		);
 		expect(after).toBe(before);
+
+		const matchedBefore = parseInt(
+			await page.getByTestId("ping-inline-matched").innerText(),
+			10,
+		);
+		await page.waitForTimeout(800);
+		const matchedAfter = parseInt(
+			await page.getByTestId("ping-inline-matched").innerText(),
+			10,
+		);
+		expect(matchedAfter).toBe(matchedBefore);
 	});
 });
