@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
 
 // We import dynamically to ensure env/config don’t get cached between tests if needed
 import { useWebSocketClient } from "@/hooks/use-websocket-client";
+import { withFakeTimers } from "./utils/timers";
 
 function LimitHarness({ timer }: { timer: any }) {
 	const {
@@ -35,16 +36,8 @@ describe("useWebSocketClient message buffer limit (dynamic)", () => {
 		// @ts-ignore
 		global.crypto.randomUUID = () => Math.random().toString(36).slice(2);
 
-		vi.useFakeTimers();
-		const timer = {
-			setTimeout: (fn: any, ms?: number) => setTimeout(fn, ms),
-			clearTimeout: (id: any) => clearTimeout(id),
-			setInterval: (fn: any, ms?: number) => setInterval(fn, ms),
-			clearInterval: (id: any) => clearInterval(id),
-			now: () => Date.now(),
-		};
-
-		render(<LimitHarness timer={timer} />);
+		await withFakeTimers(async (timer) => {
+			render(<LimitHarness timer={timer} />);
 
 		// enable dummy mode so sendMessage pushes immediately
 		await act(async () => {
@@ -71,6 +64,6 @@ describe("useWebSocketClient message buffer limit (dynamic)", () => {
 		});
 		expect(screen.getByTestId("count").textContent).toBe("0");
 
-		vi.useRealTimers();
+		});
 	});
 });

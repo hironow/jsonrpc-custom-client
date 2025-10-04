@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { useWebSocketClient } from "@/hooks/use-websocket-client";
+import { withFakeTimers } from "./utils/timers";
 
 function StrategyHarness({ timer }: { timer: any }) {
 	const {
@@ -68,16 +69,8 @@ describe("useWebSocketClient buffer strategy integration", () => {
 			});
 		}
 
-		vi.useFakeTimers();
-		const timer = {
-			setTimeout: (fn: any, ms?: number) => setTimeout(fn, ms),
-			clearTimeout: (id: any) => clearTimeout(id),
-			setInterval: (fn: any, ms?: number) => setInterval(fn, ms),
-			clearInterval: (id: any) => clearInterval(id),
-			now: () => Date.now(),
-		};
-
-		render(<StrategyHarness timer={timer} />);
+		await withFakeTimers(async (timer) => {
+			render(<StrategyHarness timer={timer} />);
 		await act(async () => {
 			screen.getByText("dummy").click();
 			screen.getByText("setLimit2").click();
@@ -104,7 +97,7 @@ describe("useWebSocketClient buffer strategy integration", () => {
 		// preferPending=false drops id-4, keeps [id-5, id-6]
 		expect(screen.getByTestId("ids").textContent).toBe("id-5,id-6");
 
-		vi.useRealTimers();
+		});
 	});
 
 	it("respects preferBatches=true to keep batch over older normal", async () => {
@@ -121,16 +114,8 @@ describe("useWebSocketClient buffer strategy integration", () => {
 			});
 		}
 
-		vi.useFakeTimers();
-		const timer = {
-			setTimeout: (fn: any, ms?: number) => setTimeout(fn, ms),
-			clearTimeout: (id: any) => clearTimeout(id),
-			setInterval: (fn: any, ms?: number) => setInterval(fn, ms),
-			clearInterval: (id: any) => clearInterval(id),
-			now: () => Date.now(),
-		};
-
-		render(<StrategyHarness timer={timer} />);
+		await withFakeTimers(async (timer) => {
+			render(<StrategyHarness timer={timer} />);
 
 		await act(async () => {
 			// Avoid duplicate button ambiguity across environments
@@ -156,6 +141,6 @@ describe("useWebSocketClient buffer strategy integration", () => {
 		// keep batch and newest
 		expect(screen.getAllByTestId("ids")[0].textContent).toBe("id-101,id-103");
 
-		vi.useRealTimers();
+		});
 	});
 });

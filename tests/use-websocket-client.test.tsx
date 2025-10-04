@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { useWebSocketClient } from "@/hooks/use-websocket-client";
+import { withFakeTimers } from "./utils/timers";
 
 // Simple component to exercise the hook in dummy mode
 function DummyComponent({ timer }: { timer: any }) {
@@ -30,16 +31,9 @@ describe("useWebSocketClient (dummy mode)", () => {
 		// @ts-ignore
 		global.crypto.randomUUID = () => "uuid-test";
 
-		vi.useFakeTimers();
-		const timer = {
-			setTimeout: (fn: any, ms?: number) => setTimeout(fn, ms),
-			clearTimeout: (id: any) => clearTimeout(id),
-			setInterval: (fn: any, ms?: number) => setInterval(fn, ms),
-			clearInterval: (id: any) => clearInterval(id),
-			now: () => Date.now(),
-		};
 
-		render(<DummyComponent timer={timer} />);
+		await withFakeTimers(async (timer) => {
+			render(<DummyComponent timer={timer} />);
 
 		// Enable dummy mode
 		await act(async () => {
@@ -72,6 +66,6 @@ describe("useWebSocketClient (dummy mode)", () => {
 		});
 		expect(screen.getByTestId("count").textContent).toBe("0");
 
-		vi.useRealTimers();
-	});
+		});
+		});
 });

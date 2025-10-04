@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { withFakeTimers } from "./utils/timers";
 import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { useWebSocketClient } from "@/hooks/use-websocket-client";
@@ -50,14 +51,7 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 	});
 
 	it("reconnects with backoff after close until open succeeds", async () => {
-		vi.useFakeTimers();
-		const timer = {
-			setTimeout: (fn: any, ms?: number) => setTimeout(fn, ms),
-			clearTimeout: (id: any) => clearTimeout(id),
-			setInterval: (fn: any, ms?: number) => setInterval(fn, ms),
-			clearInterval: (id: any) => clearInterval(id),
-			now: () => Date.now(),
-		};
+		await withFakeTimers(async (timer) => {
 
 		const sockets: FakeWS[] = [];
 		const wsFactory = vi.fn(() => {
@@ -66,7 +60,7 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 			return ws as any;
 		});
 
-		render(<ReconnectProbe timer={timer} wsFactory={wsFactory} />);
+			render(<ReconnectProbe timer={timer} wsFactory={wsFactory} />);
 
 		await act(async () => {
 			screen.getByText("noDummy").click();
@@ -82,9 +76,9 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 		});
 
 		// advance enough for first backoff (~500ms base)
-		await act(async () => {
-			vi.advanceTimersByTime(600);
-		});
+			await act(async () => {
+				vi.advanceTimersByTime(600);
+			});
 		expect(wsFactory).toHaveBeenCalledTimes(2);
 
 		// Simulate second socket success
@@ -92,7 +86,6 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 			sockets[1].onopen && sockets[1].onopen();
 		});
 
-		expect(screen.getByTestId("status").textContent).toBe("connected");
-		vi.useRealTimers();
+			expect(screen.getByTestId("status").textContent).toBe("connected");
+		});
 	});
-});
