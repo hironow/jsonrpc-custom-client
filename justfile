@@ -34,6 +34,16 @@ e2e:
 e2e-real ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash
     set -euo pipefail
+    cleanup() {
+      if [ "${started:-0}" -eq 1 ] && [ -n "${srv_pid:-}" ]; then
+        if kill -0 "$srv_pid" >/dev/null 2>&1; then
+          echo "Stopping WS server (pid $srv_pid)..."
+          kill "$srv_pid" >/dev/null 2>&1 || true
+          wait "$srv_pid" >/dev/null 2>&1 || true
+        fi
+      fi
+    }
+    trap cleanup EXIT INT TERM
     started=0
     port_open() {
       if command -v nc >/dev/null 2>&1; then
@@ -49,13 +59,13 @@ e2e-real ws_url='ws://localhost:9999/ws':
       fi
       echo "Starting local WS JSONRPC server at :9999 ..."
       mkdir -p scripts/ws-jsonrpc-server/logs
-      (
-        cd scripts/ws-jsonrpc-server && \
-        GOSUMDB=off GOFLAGS= go mod download || true && \
-        GOSUMDB=off GOFLAGS= go build -o server . && \
-        ./server --addr :9999 --path /ws
-      ) > scripts/ws-jsonrpc-server/logs/server.log 2>&1 &
-      srv_pid=$!
+      sh -c '
+        set -e
+        cd scripts/ws-jsonrpc-server
+        GOSUMDB=off GOFLAGS= go mod download || true
+        GOSUMDB=off GOFLAGS= go build -o server .
+        exec ./server --addr :9999 --path /ws
+      ' > scripts/ws-jsonrpc-server/logs/server.log 2>&1 & srv_pid=$!
       started=1
       # Wait until port is open (max ~30s)
       ready=0
@@ -78,11 +88,6 @@ e2e-real ws_url='ws://localhost:9999/ws':
     E2E_REAL_WS_URL={{ws_url}} pnpm run test:e2e
     status=$?
     set -e
-    if [ "$started" -eq 1 ]; then
-      echo "Stopping WS server (pid $srv_pid)..."
-      kill "$srv_pid" >/dev/null 2>&1 || true
-      wait "$srv_pid" >/dev/null 2>&1 || true
-    fi
     exit $status
 
 # Deploy the Go WS server to Cloud Run
