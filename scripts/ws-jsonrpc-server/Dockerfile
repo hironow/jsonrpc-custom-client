@@ -1,6 +1,6 @@
 # Multi-stage build for Go WS JSON-RPC server targeting Cloud Run
 
-FROM golang:1.21-alpine AS builder
+FROM golang:1.25-alpine AS builder
 WORKDIR /src
 RUN apk add --no-cache git
 
