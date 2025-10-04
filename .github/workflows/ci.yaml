@@ -23,6 +23,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: lts/*
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -39,6 +41,22 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.21.x'
+
+      - name: Compute Go cache paths
+        id: go-cache
+        run: |
+          echo "gomodcache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+          echo "gocache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+
+      - name: Cache Go modules and build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ steps.go-cache.outputs.gomodcache }}
+            ${{ steps.go-cache.outputs.gocache }}
+          key: ${{ runner.os }}-go-${{ hashFiles('scripts/ws-jsonrpc-server/go.mod') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Cache Playwright browsers
         id: playwright-browsers-cache
@@ -64,3 +82,12 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Cache Next.js build cache
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-next-cache-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-next-cache-

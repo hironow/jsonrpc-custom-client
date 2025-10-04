@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -50,11 +51,25 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 	conn.SetReadLimit(1048576)
 	_ = conn.SetReadDeadline(time.Time{})
 
+	// Serialize all writes to avoid concurrent writes
+	var mu sync.Mutex
+	writeJSON := func(v interface{}) error {
+		mu.Lock()
+		defer mu.Unlock()
+		return conn.WriteJSON(v)
+	}
+
 	// Periodic notification stream (heartbeat)
 	done := make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
+		// Send an immediate heartbeat so tests don't wait a full interval
+		_ = writeJSON(map[string]interface{}{
+			"jsonrpc": "2.0",
+			"method":  "stream.heartbeat",
+			"params":  map[string]interface{}{"t": time.Now().UnixMilli()},
+		})
 		for {
 			select {
 			case <-ticker.C:
@@ -65,7 +80,7 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 						"t": time.Now().UnixMilli(),
 					},
 				}
-				if err := conn.WriteJSON(notif); err != nil {
+				if err := writeJSON(notif); err != nil {
 					// client likely disconnected
 					return
 				}
@@ -95,7 +110,7 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if len(res) > 0 {
-				if err := conn.WriteJSON(res); err != nil {
+				if err := writeJSON(res); err != nil {
 					log.Println("write batch error:", err)
 					return
 				}
@@ -105,7 +120,7 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 
 		// single
 		if resp, ok := handleSingle(message); ok {
-			if err := conn.WriteJSON(resp); err != nil {
+			if err := writeJSON(resp); err != nil {
 				log.Println("write single error:", err)
 				close(done)
 				return

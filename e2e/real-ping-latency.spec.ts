@@ -20,10 +20,9 @@ test.describe("[realws] One-shot ping shows latency inline", () => {
 		await page.getByRole("button", { name: "Expand Connection Panel" }).click();
 		await page.getByRole("button", { name: "Ping" }).click();
 
-		// Open details for the ping request and verify Response Time section appears
-		await page.getByText("ping").first().click();
-		await expect(page.getByText("Response Time")).toBeVisible({
-			timeout: 5000,
-		});
+		// Navigate to Performance tab and assert Avg Latency becomes non-zero
+		await page.getByRole("tab", { name: "Performance" }).click();
+		const avgBox = page.locator("div", { hasText: "Avg Latency" }).first();
+		await expect(avgBox).toContainText(/\b[1-9]\d*ms\b/, { timeout: 10000 });
 	});
 });
