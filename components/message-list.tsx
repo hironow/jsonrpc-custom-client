@@ -13,6 +13,10 @@ import type { Message } from "@/types/message";
 import { findLinkedMessage } from "@/lib/message-link";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { estimateRowSize } from "@/lib/virtual-estimate";
+import {
+	filterMessagesByQuickFilter,
+	type QuickFilter,
+} from "@/lib/message-search";
 import { serializeMessages } from "@/lib/export";
 
 type MessageListProps = {
@@ -23,6 +27,7 @@ type MessageListProps = {
 	onClear: () => void;
 	onSelectMessage: (id: string | null) => void;
 	rowHeightMode?: "fixed" | "heuristic";
+	quickFilter?: QuickFilter;
 };
 
 function getTimeRange(elapsedMs: number): string {
@@ -49,6 +54,7 @@ export function MessageList({
 	onClear,
 	onSelectMessage,
 	rowHeightMode = "heuristic",
+	quickFilter,
 }: MessageListProps) {
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [filter, setFilter] = useState<
@@ -90,7 +96,10 @@ export function MessageList({
 		}, 1000);
 	};
 
-	const filteredMessages = messages.filter((msg) => {
+	const filteredMessages = filterMessagesByQuickFilter(
+		messages,
+		quickFilter,
+	).filter((msg) => {
 		if (filter === "all") return true;
 		if (filter === "notification") return msg.isNotification === true;
 		return msg.type === filter;
