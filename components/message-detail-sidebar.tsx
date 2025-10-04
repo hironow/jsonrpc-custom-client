@@ -101,10 +101,13 @@ export function MessageDetailSidebar({ message, onClose, linkedMessage }: Messag
   const renderJsonWithHighlight = (data: any) => {
     const jsonStr = JSON.stringify(data, null, 2)
 
-    const highlighted = jsonStr
-      .replace(/"([^"]+)":/g, '<span class="text-blue-400 font-medium">"$1"</span>:')
-      .replace(/: "([^"]*)"/g, ': <span class="text-green-400">"$1"</span>')
-      .replace(/: (\d+\.?\d*)/g, ': <span class="text-orange-400">$1</span>')
+    // Escape only HTML-significant characters to mitigate XSS while preserving quotes for highlighting
+    const safe = jsonStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
+    const highlighted = safe
+      .replace(/\"([^\"]+)\":/g, '<span class="text-blue-400 font-medium">"$1"</span>:')
+      .replace(/: \"([^\"]*)\"/g, ': <span class="text-green-400">"$1"</span>')
+      .replace(/: (\\d+\\.?\\d*)/g, ': <span class="text-orange-400">$1</span>')
       .replace(/: (true|false)/g, ': <span class="text-purple-400">$1</span>')
       .replace(/: null/g, ': <span class="text-gray-500">null</span>')
 

@@ -40,9 +40,11 @@ export type Message = {
   validationWarnings?: string[]
 }
 
+export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error"
+
 export function WebSocketClient() {
   const [url, setUrl] = useState("ws://localhost:8080")
-  const [status, setStatus] = useState<"disconnected" | "connecting" | "connected" | "error">("disconnected")
+  const [status, setStatus] = useState<ConnectionStatus>("disconnected")
   const [messages, setMessages] = useState<Message[]>([])
   const [autoScroll, setAutoScroll] = useState(true)
   const [dummyMode, setDummyMode] = useState(false)
@@ -143,13 +145,44 @@ export function WebSocketClient() {
           const data = JSON.parse(event.data)
 
           if (Array.isArray(data)) {
-            addMessage({
-              type: "received",
-              data,
-              method: "batch.response",
-              isBatch: true,
-              batchSize: data.length,
-            })
+            // Try to match this batch response to a pending batch request
+            const responseIds = data
+              .map((item: any) => (item && typeof item === "object" ? item.id : undefined))
+              .filter((id: any) => typeof id === "number") as number[]
+
+            let linkedBatchId: string | undefined
+            let responseTime: number | undefined
+
+            for (const [batchId, pending] of pendingBatchesRef.current.entries()) {
+              const allMatch = pending.requestIds.every((id) => responseIds.includes(id))
+              const hasAny = responseIds.some((id) => pending.requestIds.includes(id))
+              if (allMatch || hasAny) {
+                linkedBatchId = batchId
+                responseTime = Date.now() - pending.timestamp
+                // mark the pending batch request as resolved and link to the response
+                setMessages((prev) => prev.map((m) => (m.id === batchId ? { ...m, isPending: false } : m)))
+                pendingBatchesRef.current.delete(batchId)
+                break
+              }
+            }
+
+            const responseMsgId = crypto.randomUUID()
+            if (linkedBatchId) {
+              setMessages((prev) => prev.map((m) => (m.id === linkedBatchId ? { ...m, linkedMessageId: responseMsgId } : m)))
+            }
+
+            addMessage(
+              {
+                type: "received",
+                data,
+                method: "batch.response",
+                isBatch: true,
+                batchSize: data.length,
+                responseTime,
+                linkedMessageId: linkedBatchId,
+              },
+              responseMsgId,
+            )
             return
           }
 
@@ -414,7 +447,9 @@ export function WebSocketClient() {
     let validationWarnings: string[] | undefined
 
     if (message.type === "sent" || message.type === "received") {
-      const messageType = message.type === "sent" ? "request" : "response"
+      // Incoming notifications (no id + method present) should be validated as requests per JSON-RPC spec
+      const isIncomingNotification = message.type === "received" && (message as any).isNotification === true
+      const messageType = message.type === "sent" || isIncomingNotification ? "request" : "response"
       const validation = validateJsonRpcMessage(message.data, messageType)
 
       if (!validation.isValid || validation.warnings.length > 0) {
