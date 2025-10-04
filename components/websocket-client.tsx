@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { MessageList } from "@/components/message-list"
 import { RequestForm } from "@/components/request-form"
 import { ConnectionPanel } from "@/components/connection-panel"
@@ -13,475 +13,24 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ResponseTimeHeatmap } from "@/components/response-time-heatmap"
 import { ConnectionQualityMonitor } from "@/components/connection-quality-monitor"
-import {
-  generateDummyResponse,
-  generateDummyNotification,
-  generateDummyStreamData,
-  generateDummyRequest,
-  generateDummyBatchRequest,
-} from "@/lib/dummy-data-generator"
 import { MessageDetailSidebar } from "./message-detail-sidebar"
-import { validateJsonRpcMessage } from "@/lib/jsonrpc-validator"
 import { findLinkedMessage } from "@/lib/message-link"
 import type { ConnectionStatus } from "@/types/connection"
-
-export type Message = {
-  id: string
-  type: "sent" | "received" | "error" | "system"
-  timestamp: Date
-  data: any
-  method?: string
-  requestId?: number
-  responseTime?: number
-  isPending?: boolean
-  isNotification?: boolean
-  isBatch?: boolean
-  batchSize?: number
-  linkedMessageId?: string
-  validationErrors?: string[]
-  validationWarnings?: string[]
-}
+import type { Message } from "@/types/message"
+import { useWebSocketClient } from "@/hooks/use-websocket-client"
 
 export function WebSocketClient() {
-  const [url, setUrl] = useState("ws://localhost:8080")
-  const [status, setStatus] = useState<ConnectionStatus>("disconnected")
-  const [messages, setMessages] = useState<Message[]>([])
+  const { url, setUrl, status, messages, dummyMode, setDummyMode, connect, disconnect, sendMessage, sendBatchMessage, clearMessages } =
+    useWebSocketClient()
   const [autoScroll, setAutoScroll] = useState(true)
-  const [dummyMode, setDummyMode] = useState(false)
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
   const [rightSidebarTab, setRightSidebarTab] = useState<"details" | "notifications">("details")
-  const wsRef = useRef<WebSocket | null>(null)
-  const messageIdCounter = useRef(1)
-  const dummyIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const autoRequestIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const pendingRequestsRef = useRef<Map<number, { timestamp: number; messageId: string }>>(new Map())
-  const pendingBatchesRef = useRef<Map<string, { timestamp: number; requestIds: number[] }>>(new Map())
+  // connection handlers come from the hook
 
-  const connectDummy = () => {
-    setStatus("connecting")
-    addSystemMessage("Starting dummy mode...")
-
-    setTimeout(() => {
-      setStatus("connected")
-      addSystemMessage("Dummy mode activated - Simulating JSONRPC stream")
-
-      autoRequestIntervalRef.current = setInterval(() => {
-        const rand = Math.random()
-
-        if (rand < 0.4) {
-          // Send batch request (40% chance)
-          const batchRequests = generateDummyBatchRequest()
-          const requests = batchRequests.map((req: any) => ({
-            method: req.method,
-            params: req.params,
-          }))
-          sendBatchMessage(requests)
-        } else {
-          // Send single request (60% chance)
-          const requestData = generateDummyRequest(messageIdCounter.current++)
-          sendMessage(requestData.method, requestData.params)
-        }
-      }, 2500)
-
-      dummyIntervalRef.current = setInterval(() => {
-        const rand = Math.random()
-        if (rand < 0.6) {
-          const streamData = generateDummyStreamData()
-          addMessage({
-            type: "received",
-            data: streamData,
-            method: "stream.data",
-            isNotification: true,
-          })
-        } else if (rand < 0.85) {
-          const notification = generateDummyNotification()
-          addMessage({
-            type: "received",
-            data: notification,
-            method: "notification",
-            isNotification: true,
-          })
-        }
-      }, 1500)
-    }, 800)
-  }
-
-  const disconnectDummy = () => {
-    if (autoRequestIntervalRef.current) {
-      clearInterval(autoRequestIntervalRef.current)
-      autoRequestIntervalRef.current = null
-    }
-    if (dummyIntervalRef.current) {
-      clearInterval(dummyIntervalRef.current)
-      dummyIntervalRef.current = null
-    }
-    setStatus("disconnected")
-    addSystemMessage("Dummy mode deactivated")
-  }
-
-  const connect = () => {
-    if (dummyMode) {
-      connectDummy()
-      return
-    }
-
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      return
-    }
-
-    setStatus("connecting")
-    addSystemMessage("Connecting to " + url)
-
-    try {
-      const ws = new WebSocket(url)
-
-      ws.onopen = () => {
-        setStatus("connected")
-        addSystemMessage("Connected successfully")
-      }
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data)
-
-          if (Array.isArray(data)) {
-            // Try to match this batch response to a pending batch request
-            const responseIds = data
-              .map((item: any) => (item && typeof item === "object" ? item.id : undefined))
-              .filter((id: any) => typeof id === "number") as number[]
-
-            let linkedBatchId: string | undefined
-            let responseTime: number | undefined
-
-            for (const [batchId, pending] of pendingBatchesRef.current.entries()) {
-              const allMatch = pending.requestIds.every((id) => responseIds.includes(id))
-              const hasAny = responseIds.some((id) => pending.requestIds.includes(id))
-              if (allMatch || hasAny) {
-                linkedBatchId = batchId
-                responseTime = Date.now() - pending.timestamp
-                // mark the pending batch request as resolved and link to the response
-                setMessages((prev) => prev.map((m) => (m.id === batchId ? { ...m, isPending: false } : m)))
-                pendingBatchesRef.current.delete(batchId)
-                break
-              }
-            }
-
-            const responseMsgId = crypto.randomUUID()
-            if (linkedBatchId) {
-              setMessages((prev) => prev.map((m) => (m.id === linkedBatchId ? { ...m, linkedMessageId: responseMsgId } : m)))
-            }
-
-            addMessage(
-              {
-                type: "received",
-                data,
-                method: "batch.response",
-                isBatch: true,
-                batchSize: data.length,
-                responseTime,
-                linkedMessageId: linkedBatchId,
-              },
-              responseMsgId,
-            )
-            return
-          }
-
-          const requestId = data.id
-
-          const isNotification = requestId === undefined && data.method !== undefined
-
-          if (requestId !== undefined && pendingRequestsRef.current.has(requestId)) {
-            const pending = pendingRequestsRef.current.get(requestId)!
-            const responseTime = Date.now() - pending.timestamp
-
-            // Update the pending request message
-            setMessages((prev) =>
-              prev.map((msg) => (msg.id === pending.messageId ? { ...msg, isPending: false } : msg)),
-            )
-
-            addMessage({
-              type: "received",
-              data,
-              method: data.method || "response",
-              requestId,
-              responseTime,
-            })
-
-            pendingRequestsRef.current.delete(requestId)
-          } else {
-            addMessage({
-              type: "received",
-              data,
-              method: data.method || (data.result !== undefined ? "response" : "notification"),
-              isNotification,
-            })
-          }
-        } catch (error) {
-          addMessage({
-            type: "received",
-            data: event.data,
-          })
-        }
-      }
-
-      ws.onerror = (error) => {
-        setStatus("error")
-        addMessage({
-          type: "error",
-          data: { message: "WebSocket error occurred" },
-        })
-      }
-
-      ws.onclose = () => {
-        setStatus("disconnected")
-        addSystemMessage("Connection closed")
-        pendingRequestsRef.current.clear()
-        pendingBatchesRef.current.clear()
-      }
-
-      wsRef.current = ws
-    } catch (error) {
-      setStatus("error")
-      addMessage({
-        type: "error",
-        data: { message: "Failed to connect: " + (error as Error).message },
-      })
-    }
-  }
-
-  const disconnect = () => {
-    if (dummyMode) {
-      disconnectDummy()
-      return
-    }
-
-    if (wsRef.current) {
-      wsRef.current.close()
-      wsRef.current = null
-    }
-  }
-
-  const sendMessage = (method: string, params: any) => {
-    if (dummyMode) {
-      const id = messageIdCounter.current++
-      const message = {
-        jsonrpc: "2.0",
-        method,
-        params,
-        id,
-      }
-
-      const messageId = crypto.randomUUID()
-      pendingRequestsRef.current.set(id, { timestamp: Date.now(), messageId })
-
-      addMessage(
-        {
-          type: "sent",
-          data: message,
-          method,
-          requestId: id,
-          isPending: true,
-        },
-        messageId,
-      )
-
-      const delay = 300 + Math.random() * 700
-      setTimeout(() => {
-        const isError = Math.random() < 0.15
-        const response = generateDummyResponse(id, isError)
-        const responseTime = delay
-
-        // Update pending status
-        setMessages((prev) => prev.map((msg) => (msg.id === messageId ? { ...msg, isPending: false } : msg)))
-
-        addMessage({
-          type: "received",
-          data: response,
-          method: "response",
-          requestId: id,
-          responseTime,
-        })
-
-        pendingRequestsRef.current.delete(id)
-      }, delay)
-      return
-    }
-
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      addMessage({
-        type: "error",
-        data: { message: "Not connected to WebSocket" },
-      })
-      return
-    }
-
-    const id = messageIdCounter.current++
-    const message = {
-      jsonrpc: "2.0",
-      method,
-      params,
-      id,
-    }
-
-    try {
-      const messageId = crypto.randomUUID()
-      pendingRequestsRef.current.set(id, { timestamp: Date.now(), messageId })
-
-      wsRef.current.send(JSON.stringify(message))
-      addMessage(
-        {
-          type: "sent",
-          data: message,
-          method,
-          requestId: id,
-          isPending: true,
-        },
-        messageId,
-      )
-    } catch (error) {
-      addMessage({
-        type: "error",
-        data: { message: "Failed to send: " + (error as Error).message },
-      })
-    }
-  }
-
-  const sendBatchMessage = (requests: Array<{ method: string; params: any }>) => {
-    if (dummyMode) {
-      const batchMessages = requests.map((req) => ({
-        jsonrpc: "2.0",
-        method: req.method,
-        params: req.params,
-        id: messageIdCounter.current++,
-      }))
-
-      const batchId = crypto.randomUUID()
-      const timestamp = Date.now()
-
-      addMessage(
-        {
-          type: "sent",
-          data: batchMessages,
-          method: "batch.request",
-          isBatch: true,
-          batchSize: batchMessages.length,
-          isPending: true,
-        },
-        batchId,
-      )
-
-      const delay = 400 + Math.random() * 800
-      setTimeout(() => {
-        const batchResponses = batchMessages.map((msg) => {
-          const isError = Math.random() < 0.15
-          return generateDummyResponse(msg.id, isError)
-        })
-
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === batchId ? { ...msg, isPending: false, linkedMessageId: crypto.randomUUID() } : msg,
-          ),
-        )
-
-        const responseId = crypto.randomUUID()
-        setMessages((prev) => prev.map((msg) => (msg.id === batchId ? { ...msg, linkedMessageId: responseId } : msg)))
-
-        addMessage(
-          {
-            type: "received",
-            data: batchResponses,
-            method: "batch.response",
-            isBatch: true,
-            batchSize: batchResponses.length,
-            responseTime: delay,
-            linkedMessageId: batchId, // Link back to request
-          },
-          responseId,
-        )
-      }, delay)
-      return
-    }
-
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      addMessage({
-        type: "error",
-        data: { message: "Not connected to WebSocket" },
-      })
-      return
-    }
-
-    const batchMessages = requests.map((req) => ({
-      jsonrpc: "2.0",
-      method: req.method,
-      params: req.params,
-      id: messageIdCounter.current++,
-    }))
-
-    try {
-      const batchId = crypto.randomUUID()
-      const requestIds = batchMessages.map((msg) => msg.id)
-      pendingBatchesRef.current.set(batchId, { timestamp: Date.now(), requestIds })
-
-      wsRef.current.send(JSON.stringify(batchMessages))
-      addMessage(
-        {
-          type: "sent",
-          data: batchMessages,
-          method: "batch.request",
-          isBatch: true,
-          batchSize: batchMessages.length,
-          isPending: true,
-        },
-        batchId,
-      )
-    } catch (error) {
-      addMessage({
-        type: "error",
-        data: { message: "Failed to send batch: " + (error as Error).message },
-      })
-    }
-  }
-
-  const addMessage = (message: Omit<Message, "id" | "timestamp">, id?: string) => {
-    let validationErrors: string[] | undefined
-    let validationWarnings: string[] | undefined
-
-    if (message.type === "sent" || message.type === "received") {
-      // Incoming notifications (no id + method present) should be validated as requests per JSON-RPC spec
-      const isIncomingNotification = message.type === "received" && (message as any).isNotification === true
-      const messageType = message.type === "sent" || isIncomingNotification ? "request" : "response"
-      const validation = validateJsonRpcMessage(message.data, messageType)
-
-      if (!validation.isValid || validation.warnings.length > 0) {
-        validationErrors = validation.errors.length > 0 ? validation.errors : undefined
-        validationWarnings = validation.warnings.length > 0 ? validation.warnings : undefined
-      }
-    }
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        ...message,
-        id: id || crypto.randomUUID(),
-        timestamp: new Date(),
-        validationErrors,
-        validationWarnings,
-      },
-    ])
-  }
-
-  const addSystemMessage = (text: string) => {
-    addMessage({
-      type: "system",
-      data: { message: text },
-    })
-  }
-
-  const clearMessages = () => {
-    setMessages([])
+  // sending/clearing are provided by hook
+  const clearLocal = () => {
+    clearMessages()
     setSelectedMessageId(null)
-    pendingRequestsRef.current.clear()
-    pendingBatchesRef.current.clear()
   }
 
   const handleDummyModeToggle = (enabled: boolean) => {
@@ -492,7 +41,6 @@ export function WebSocketClient() {
     }
 
     setDummyMode(enabled)
-    addSystemMessage(enabled ? "Dummy mode enabled" : "Dummy mode disabled")
 
     if (wasConnected) {
       setTimeout(() => {
@@ -501,19 +49,7 @@ export function WebSocketClient() {
     }
   }
 
-  useEffect(() => {
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close()
-      }
-      if (autoRequestIntervalRef.current) {
-        clearInterval(autoRequestIntervalRef.current)
-      }
-      if (dummyIntervalRef.current) {
-        clearInterval(dummyIntervalRef.current)
-      }
-    }
-  }, [])
+  // lifecycle managed by hook
 
   const selectedMessage = selectedMessageId ? messages.find((m) => m.id === selectedMessageId) : null
 
@@ -604,7 +140,7 @@ export function WebSocketClient() {
                 autoScroll={autoScroll}
                 selectedMessageId={selectedMessageId}
                 onAutoScrollChange={setAutoScroll}
-                onClear={clearMessages}
+                onClear={clearLocal}
                 onSelectMessage={setSelectedMessageId}
               />
             </div>

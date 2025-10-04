@@ -15,6 +15,32 @@ describe('validateJsonRpcMessage - request', () => {
     expect(res.isValid).toBe(true)
     expect(res.warnings.length).toBeGreaterThan(0)
   })
+
+  it('rejects when missing method', () => {
+    const req: any = { jsonrpc: '2.0', id: 1 }
+    const res = validateJsonRpcMessage(req, 'request')
+    expect(res.isValid).toBe(false)
+    expect(res.errors.some(e => e.includes('Missing required "method"'))).toBe(true)
+  })
+
+  it('rejects when method is not string', () => {
+    const req: any = { jsonrpc: '2.0', method: 42, id: 1 }
+    const res = validateJsonRpcMessage(req, 'request')
+    expect(res.isValid).toBe(false)
+  })
+
+  it('rejects when params is neither array nor object', () => {
+    const req: any = { jsonrpc: '2.0', method: 'sum', params: 'bad', id: 1 }
+    const res = validateJsonRpcMessage(req, 'request')
+    expect(res.isValid).toBe(false)
+  })
+
+  it('rejects invalid jsonrpc value', () => {
+    const req: any = { jsonrpc: '1.0', method: 'sum', id: 1 }
+    const res = validateJsonRpcMessage(req, 'request')
+    expect(res.isValid).toBe(false)
+    expect(res.errors.some(e => e.includes('jsonrpc'))).toBe(true)
+  })
 })
 
 describe('validateJsonRpcMessage - response', () => {
@@ -46,6 +72,12 @@ describe('validateJsonRpcMessage - response', () => {
     const res2 = validateJsonRpcMessage(resp2, 'response')
     expect(res2.isValid).toBe(false)
   })
+
+  it('rejects invalid jsonrpc in response', () => {
+    const resp: any = { jsonrpc: '1.0', result: {}, id: 1 }
+    const res = validateJsonRpcMessage(resp, 'response')
+    expect(res.isValid).toBe(false)
+  })
 })
 
 describe('validateJsonRpcMessage - batch', () => {
@@ -59,5 +91,20 @@ describe('validateJsonRpcMessage - batch', () => {
     // Second item is a response-like shape when validating as request, should error
     expect(res.isValid).toBe(false)
     expect(res.errors.length).toBeGreaterThan(0)
+  })
+
+  it('rejects empty batch', () => {
+    const res = validateJsonRpcMessage([], 'request')
+    expect(res.isValid).toBe(false)
+  })
+
+  it('collects warnings for notifications in batch', () => {
+    const batch = [
+      { jsonrpc: '2.0', method: 'note' },
+      { jsonrpc: '2.0', method: 'sum', id: 1 },
+    ]
+    const res = validateJsonRpcMessage(batch, 'request')
+    expect(res.isValid).toBe(true)
+    expect(res.warnings.length).toBeGreaterThan(0)
   })
 })
