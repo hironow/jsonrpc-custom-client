@@ -31,41 +31,42 @@ describe("useWebSocketClient (dummy mode)", () => {
 		// @ts-ignore
 		global.crypto.randomUUID = () => "uuid-test";
 
-
 		await withFakeTimers(async (timer) => {
 			render(<DummyComponent timer={timer} />);
 
-		// Enable dummy mode
-		await act(async () => {
-			screen.getByText("dummy").click();
-		});
+			// Enable dummy mode
+			await act(async () => {
+				screen.getByText("dummy").click();
+			});
 
-		// Connect in dummy mode
-		await act(async () => {
-			screen.getByText("connect").click();
-			// initial connecting + activate after 800ms
-			vi.advanceTimersByTime(1200);
-			vi.runOnlyPendingTimers();
-		});
+			// Connect in dummy mode
+			await act(async () => {
+				screen.getByText("connect").click();
+				// initial connecting + activate after 800ms
+				vi.advanceTimersByTime(1200);
+				vi.runOnlyPendingTimers();
+			});
 
-		// Allow state updates to flush
-		await act(async () => {});
-		expect(screen.getByTestId("status").textContent).toBe("connected");
+			// Allow state updates to flush
+			await act(async () => {});
+			expect(screen.getByTestId("status").textContent).toBe("connected");
 
-		// Advance time to allow auto streaming to add messages
-		await act(async () => {
-			vi.advanceTimersByTime(3000);
-		});
+			// Advance time to allow auto streaming to add messages
+			await act(async () => {
+				vi.advanceTimersByTime(3000);
+			});
 
-		const count = parseInt(screen.getByTestId("count").textContent || "0", 10);
-		expect(count).toBeGreaterThan(0);
+			const count = parseInt(
+				screen.getByTestId("count").textContent || "0",
+				10,
+			);
+			expect(count).toBeGreaterThan(0);
 
-		// Clear messages
-		await act(async () => {
-			screen.getByText("clear").click();
+			// Clear messages
+			await act(async () => {
+				screen.getByText("clear").click();
+			});
+			expect(screen.getByTestId("count").textContent).toBe("0");
 		});
-		expect(screen.getByTestId("count").textContent).toBe("0");
-
-		});
-		});
+	});
 });

@@ -71,32 +71,31 @@ describe("useWebSocketClient buffer strategy integration", () => {
 
 		await withFakeTimers(async (timer) => {
 			render(<StrategyHarness timer={timer} />);
-		await act(async () => {
-			screen.getByText("dummy").click();
-			screen.getByText("setLimit2").click();
-			screen.getByText("prefPendingOn").click(); // default true, explicit
-			// push three pending messages quickly (no timer advance so all remain pending)
-			screen.getByText("send").click(); // id-1
-			screen.getByText("send").click(); // id-2
-			screen.getByText("send").click(); // id-3 -> triggers trim
-		});
-		expect(screen.getAllByTestId("count")[0].textContent).toBe("2");
-		// preferPending=true keeps preferred during first pass; forced drop removes from front → [id-2,id-3]
-		expect(screen.getByTestId("ids").textContent).toBe("id-2,id-3");
+			await act(async () => {
+				screen.getByText("dummy").click();
+				screen.getByText("setLimit2").click();
+				screen.getByText("prefPendingOn").click(); // default true, explicit
+				// push three pending messages quickly (no timer advance so all remain pending)
+				screen.getByText("send").click(); // id-1
+				screen.getByText("send").click(); // id-2
+				screen.getByText("send").click(); // id-3 -> triggers trim
+			});
+			expect(screen.getAllByTestId("count")[0].textContent).toBe("2");
+			// preferPending=true keeps preferred during first pass; forced drop removes from front → [id-2,id-3]
+			expect(screen.getByTestId("ids").textContent).toBe("id-2,id-3");
 
-		// now try preferPending=false
-		await act(async () => {
-			screen.getByText("clear").click();
-			screen.getByText("prefPendingOff").click();
-			// push three pending again
-			screen.getByText("send").click(); // id-4
-			screen.getByText("send").click(); // id-5
-			screen.getByText("send").click(); // id-6
-		});
-		expect(screen.getAllByTestId("count")[0].textContent).toBe("2");
-		// preferPending=false drops id-4, keeps [id-5, id-6]
-		expect(screen.getByTestId("ids").textContent).toBe("id-5,id-6");
-
+			// now try preferPending=false
+			await act(async () => {
+				screen.getByText("clear").click();
+				screen.getByText("prefPendingOff").click();
+				// push three pending again
+				screen.getByText("send").click(); // id-4
+				screen.getByText("send").click(); // id-5
+				screen.getByText("send").click(); // id-6
+			});
+			expect(screen.getAllByTestId("count")[0].textContent).toBe("2");
+			// preferPending=false drops id-4, keeps [id-5, id-6]
+			expect(screen.getByTestId("ids").textContent).toBe("id-5,id-6");
 		});
 	});
 
@@ -117,30 +116,29 @@ describe("useWebSocketClient buffer strategy integration", () => {
 		await withFakeTimers(async (timer) => {
 			render(<StrategyHarness timer={timer} />);
 
-		await act(async () => {
-			// Avoid duplicate button ambiguity across environments
-			const btn = screen.getAllByText("dummy")[0];
-			btn && (btn as HTMLButtonElement).click();
-			const limitBtn = screen.getAllByText("setLimit2")[0];
-			(limitBtn as HTMLButtonElement).click();
-			const pbOn = screen.getAllByText("prefBatchesOn")[0];
-			(pbOn as HTMLButtonElement).click();
-			const ppOff = screen.getAllByText("prefPendingOff")[0];
-			(ppOff as HTMLButtonElement).click();
-		});
+			await act(async () => {
+				// Avoid duplicate button ambiguity across environments
+				const btn = screen.getAllByText("dummy")[0];
+				btn && (btn as HTMLButtonElement).click();
+				const limitBtn = screen.getAllByText("setLimit2")[0];
+				(limitBtn as HTMLButtonElement).click();
+				const pbOn = screen.getAllByText("prefBatchesOn")[0];
+				(pbOn as HTMLButtonElement).click();
+				const ppOff = screen.getAllByText("prefPendingOff")[0];
+				(ppOff as HTMLButtonElement).click();
+			});
 
-		// let state update and re-render commit
-		await act(async () => {});
+			// let state update and re-render commit
+			await act(async () => {});
 
-		await act(async () => {
-			screen.getAllByText("sendBatch1")[0].click(); // id-101 (batch)
-			screen.getAllByText("send")[0].click(); // id-102
-			screen.getAllByText("send")[0].click(); // id-103 -> trim
-		});
-		expect(screen.getAllByTestId("count")[0].textContent).toBe("2");
-		// keep batch and newest
-		expect(screen.getAllByTestId("ids")[0].textContent).toBe("id-101,id-103");
-
+			await act(async () => {
+				screen.getAllByText("sendBatch1")[0].click(); // id-101 (batch)
+				screen.getAllByText("send")[0].click(); // id-102
+				screen.getAllByText("send")[0].click(); // id-103 -> trim
+			});
+			expect(screen.getAllByTestId("count")[0].textContent).toBe("2");
+			// keep batch and newest
+			expect(screen.getAllByTestId("ids")[0].textContent).toBe("id-101,id-103");
 		});
 	});
 });

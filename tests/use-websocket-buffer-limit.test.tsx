@@ -39,31 +39,30 @@ describe("useWebSocketClient message buffer limit (dynamic)", () => {
 		await withFakeTimers(async (timer) => {
 			render(<LimitHarness timer={timer} />);
 
-		// enable dummy mode so sendMessage pushes immediately
-		await act(async () => {
-			screen.getByText("dummy").click();
-		});
+			// enable dummy mode so sendMessage pushes immediately
+			await act(async () => {
+				screen.getByText("dummy").click();
+			});
 
-		// push 5 messages synchronously (dummy path adds immediately)
-		await act(async () => {
-			for (let i = 0; i < 5; i++) screen.getByText("send").click();
-		});
+			// push 5 messages synchronously (dummy path adds immediately)
+			await act(async () => {
+				for (let i = 0; i < 5; i++) screen.getByText("send").click();
+			});
 
-		expect(screen.getByTestId("count").textContent).toBe("5");
+			expect(screen.getByTestId("count").textContent).toBe("5");
 
-		// reduce limit to 3 and expect trimming
-		await act(async () => {
-			screen.getByText("set3").click();
-		});
+			// reduce limit to 3 and expect trimming
+			await act(async () => {
+				screen.getByText("set3").click();
+			});
 
-		expect(screen.getByTestId("count").textContent).toBe("3");
+			expect(screen.getByTestId("count").textContent).toBe("3");
 
-		// cleanup
-		await act(async () => {
-			screen.getByText("clear").click();
-		});
-		expect(screen.getByTestId("count").textContent).toBe("0");
-
+			// cleanup
+			await act(async () => {
+				screen.getByText("clear").click();
+			});
+			expect(screen.getByTestId("count").textContent).toBe("0");
 		});
 	});
 });

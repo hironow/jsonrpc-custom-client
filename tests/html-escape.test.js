@@ -9,7 +9,7 @@ test("escapeHtml escapes <, >, & only", () => {
 });
 
 test("escapeHtml leaves quotes intact for highlighting", () => {
-	const input = '"quoted" and \"escaped\"';
+	const input = '"quoted" and "escaped"';
 	const out = escapeHtml(input);
 	assert.equal(out.includes("&quot;"), false);
 	assert.equal(out.includes('"quoted"'), true);

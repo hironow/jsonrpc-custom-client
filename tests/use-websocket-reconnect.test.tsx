@@ -31,7 +31,6 @@ function ReconnectProbe({ timer, wsFactory }: any) {
 		timer,
 		wsFactory,
 	});
-});
 	return (
 		<div>
 			<div data-testid="status">{status}</div>
@@ -53,19 +52,19 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 
 	it("reconnects with backoff after close until open succeeds", async () => {
 		await withFakeTimers(async (timer) => {
-
-		const sockets: FakeWS[] = [];
-		const wsFactory = vi.fn(() => {
-			const ws = makeWs();
-			sockets.push(ws);
-			return ws as any;
-		});
+			const sockets: FakeWS[] = [];
+			const wsFactory = vi.fn(() => {
+				const ws = makeWs();
+				sockets.push(ws);
+				return ws as any;
+			});
 
 			render(<ReconnectProbe timer={timer} wsFactory={wsFactory} />);
 
-		await act(async () => {
-			screen.getByText("noDummy").click();
-			screen.getByText("connect").click();
+			await act(async () => {
+				screen.getByText("noDummy").click();
+				screen.getByText("connect").click();
+			});
 		});
 
 		// First created socket should open later on
@@ -77,9 +76,9 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 		});
 
 		// advance enough for first backoff (~500ms base)
-			await act(async () => {
-				vi.advanceTimersByTime(600);
-			});
+		await act(async () => {
+			vi.advanceTimersByTime(600);
+		});
 		expect(wsFactory).toHaveBeenCalledTimes(2);
 
 		// Simulate second socket success
@@ -87,6 +86,6 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 			sockets[1].onopen && sockets[1].onopen();
 		});
 
-			expect(screen.getByTestId("status").textContent).toBe("connected");
-		});
+		expect(screen.getByTestId("status").textContent).toBe("connected");
 	});
+});
