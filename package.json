@@ -71,7 +71,7 @@
 		"typescript": "^5",
 		"vitest": "^3.2.4"
 	},
-	"name": "my-v0-project",
+	"name": "jsonrpc-custom-client",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {

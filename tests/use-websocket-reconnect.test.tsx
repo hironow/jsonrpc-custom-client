@@ -65,27 +65,27 @@ describe("useWebSocketClient auto-reconnect (unit)", () => {
 				screen.getByText("noDummy").click();
 				screen.getByText("connect").click();
 			});
+
+			// First created socket should open later on
+			expect(wsFactory).toHaveBeenCalledTimes(1);
+
+			// Simulate immediate close; hook should schedule a reconnect
+			await act(async () => {
+				sockets[0].onclose && sockets[0].onclose();
+			});
+
+			// advance enough for first backoff (~500ms base)
+			await act(async () => {
+				vi.advanceTimersByTime(600);
+			});
+			expect(wsFactory).toHaveBeenCalledTimes(2);
+
+			// Simulate second socket success
+			await act(async () => {
+				sockets[1].onopen && sockets[1].onopen();
+			});
+
+			expect(screen.getByTestId("status").textContent).toBe("connected");
 		});
-
-		// First created socket should open later on
-		expect(wsFactory).toHaveBeenCalledTimes(1);
-
-		// Simulate immediate close; hook should schedule a reconnect
-		await act(async () => {
-			sockets[0].onclose && sockets[0].onclose();
-		});
-
-		// advance enough for first backoff (~500ms base)
-		await act(async () => {
-			vi.advanceTimersByTime(600);
-		});
-		expect(wsFactory).toHaveBeenCalledTimes(2);
-
-		// Simulate second socket success
-		await act(async () => {
-			sockets[1].onopen && sockets[1].onopen();
-		});
-
-		expect(screen.getByTestId("status").textContent).toBe("connected");
 	});
 });
