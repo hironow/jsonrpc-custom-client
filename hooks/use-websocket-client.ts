@@ -247,9 +247,13 @@ export function useWebSocketClient(options?: {
 						return;
 					}
 
-					const requestId = data.id;
+					const hasId =
+						typeof data === "object" &&
+						data !== null &&
+						Object.prototype.hasOwnProperty.call(data, "id");
+					const requestId = hasId ? (data as any).id : undefined;
 					const isNotification =
-						requestId === undefined && data.method !== undefined;
+						!hasId && typeof (data as any)?.method === "string";
 
 					if (
 						requestId !== undefined &&
@@ -274,12 +278,17 @@ export function useWebSocketClient(options?: {
 						});
 						pendingRequestsRef.current.delete(requestId);
 					} else {
+						const methodLabel =
+							typeof (data as any)?.method === "string"
+								? (data as any).method
+								: (data as any).result !== undefined ||
+										(data as any).error !== undefined
+									? "response"
+									: "notification";
 						addMessage({
 							type: "received",
 							data,
-							method:
-								data.method ||
-								(data.result !== undefined ? "response" : "notification"),
+							method: methodLabel,
 							isNotification,
 						});
 					}

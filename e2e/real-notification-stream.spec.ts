@@ -16,12 +16,13 @@ test.describe("[realws] Notification stream appears in sidebar", () => {
 			timeout: 15000,
 		});
 
-		// Open Notifications tab
+		// Open Notifications tab and wait for the panel
 		await page.getByRole("tab", { name: "Notifications" }).click();
-		const notifPanel = page.getByRole("tabpanel", { name: "Notifications" });
-		// Wait for at least one notification card to appear in the panel
-		await expect(
-			notifPanel.locator('[data-slot="card"].cursor-pointer').first(),
-		).toBeVisible({ timeout: 20000 });
+		const panel = page.getByTestId("notifications-panel");
+		await expect(panel).toBeVisible();
+		// Wait for at least one notification item to appear in the panel
+		await expect(panel.getByTestId("notification-item").first()).toBeVisible({
+			timeout: 20000,
+		});
 	});
 });

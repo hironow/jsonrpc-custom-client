@@ -43,7 +43,7 @@ export function NotificationSidebar({
 	};
 
 	return (
-		<Card className="h-full flex flex-col">
+		<Card className="h-full flex flex-col" data-testid="notifications-panel">
 			<CardHeader className="pb-2 border-b">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
@@ -79,6 +79,7 @@ export function NotificationSidebar({
 											? "bg-blue-500/10 border-blue-500 ring-1 ring-blue-500/50"
 											: "bg-card/50 hover:bg-card"
 									}`}
+									data-testid="notification-item"
 									onClick={() => onSelectNotification(notification.id)}
 								>
 									<div className="p-2">
