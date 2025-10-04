@@ -26,9 +26,15 @@ test.describe("[realws] echo returns params as result", () => {
 		await paramsArea.fill('{"hello":"world"}');
 		await page.getByRole("button", { name: /^Send Request$/ }).click();
 
-		// Expect the response JSON to include the echoed params
+		// Wait until the response is linked in the list
+		await expect(page.getByText(/→\s*Response/)).toBeVisible({
+			timeout: 10000,
+		});
+
+		// Open details for the echo entry and assert echoed params in JSON
+		await page.getByText("echo").first().click();
 		await expect(
-			page.getByText(/→\s*\{\s*"hello"\s*:\s*"world"\s*\}/),
-		).toBeVisible();
+			page.locator("pre", { hasText: /"hello"\s*:\s*"world"/ }).first(),
+		).toBeVisible({ timeout: 10000 });
 	});
 });
