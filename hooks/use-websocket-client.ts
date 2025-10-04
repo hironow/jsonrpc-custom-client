@@ -9,7 +9,7 @@ import {
 	pushWithLimitWithOptions,
 	trimToLimitWithOptions,
 } from "@/lib/message-buffer";
-import { matchBatchResponse } from "@/lib/batch-match";
+import { processIncomingMessage } from "@/lib/ws-message-processor";
 
 type TimerLike = {
 	setTimeout: (fn: (...args: any[]) => void, ms?: number) => any;
@@ -56,10 +56,14 @@ export function useWebSocketClient(options?: {
 		useState<boolean>(false);
 	const [bufferDropChunkSize, setBufferDropChunkSize] = useState<number>(1);
 
+	// Fast ping toggle (disabled by default)
+	const [fastPingEnabled, setFastPingEnabled] = useState<boolean>(false);
+
 	const wsRef = useRef<WebSocket | null>(null);
 	const messageIdCounter = useRef(1);
 	const dummyIntervalRef = useRef<NodeJS.Timeout | null>(null);
 	const autoRequestIntervalRef = useRef<NodeJS.Timeout | null>(null);
+	const fastPingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 	const pendingRequestsRef = useRef<
 		Map<number, { timestamp: number; messageId: string }>
 	>(new Map());
@@ -194,91 +198,16 @@ export function useWebSocketClient(options?: {
 
 			ws.onmessage = (event) => {
 				try {
-					const data = JSON.parse(event.data);
-					if (Array.isArray(data)) {
-						const responseIds = data
-							.map((item: any) =>
-								item && typeof item === "object" ? item.id : undefined,
-							)
-							.filter((id: any) => typeof id === "number") as number[];
-
-						const now = timer.now ? timer.now() : Date.now();
-						const { linkedBatchId, responseTime } = matchBatchResponse(
-							pendingBatchesRef.current,
-							responseIds,
-							now,
-							{ mode: "all" },
-						);
-						if (linkedBatchId) {
-							setMessages((prev) =>
-								prev.map((m) =>
-									m.id === linkedBatchId ? { ...m, isPending: false } : m,
-								),
-							);
-							pendingBatchesRef.current.delete(linkedBatchId);
-						}
-
-						const responseMsgId = crypto.randomUUID();
-						if (linkedBatchId) {
-							setMessages((prev) =>
-								prev.map((m) =>
-									m.id === linkedBatchId
-										? { ...m, linkedMessageId: responseMsgId }
-										: m,
-								),
-							);
-						}
-						addMessage(
-							{
-								type: "received",
-								data,
-								method: "batch.response",
-								isBatch: true,
-								batchSize: data.length,
-								responseTime,
-								linkedMessageId: linkedBatchId,
-							},
-							responseMsgId,
-						);
-						return;
-					}
-
-					const requestId = data.id;
-					const isNotification =
-						requestId === undefined && data.method !== undefined;
-
-					if (
-						requestId !== undefined &&
-						pendingRequestsRef.current.has(requestId)
-					) {
-						const pending = pendingRequestsRef.current.get(requestId)!;
-						const now = timer.now ? timer.now() : Date.now();
-						const responseTime = now - pending.timestamp;
-						setMessages((prev) =>
-							prev.map((msg) =>
-								msg.id === pending.messageId
-									? { ...msg, isPending: false }
-									: msg,
-							),
-						);
-						addMessage({
-							type: "received",
-							data,
-							method: data.method || "response",
-							requestId,
-							responseTime,
-						});
-						pendingRequestsRef.current.delete(requestId);
-					} else {
-						addMessage({
-							type: "received",
-							data,
-							method:
-								data.method ||
-								(data.result !== undefined ? "response" : "notification"),
-							isNotification,
-						});
-					}
+					const parsed = JSON.parse(event.data);
+					const now = timer.now ? timer.now() : Date.now();
+					processIncomingMessage(parsed, {
+						now,
+						uuid: () => crypto.randomUUID(),
+						addMessage,
+						setMessages,
+						pendingRequests: pendingRequestsRef.current,
+						pendingBatches: pendingBatchesRef.current,
+					});
 				} catch (error) {
 					addMessage({ type: "received", data: event.data });
 				}
@@ -333,6 +262,8 @@ export function useWebSocketClient(options?: {
 			if (autoRequestIntervalRef.current)
 				clearInterval(autoRequestIntervalRef.current);
 			if (dummyIntervalRef.current) clearInterval(dummyIntervalRef.current);
+			if (fastPingIntervalRef.current)
+				timer.clearInterval(fastPingIntervalRef.current);
 			setStatus("disconnected");
 			addSystemMessage("Dummy mode deactivated");
 			return;
@@ -408,6 +339,11 @@ export function useWebSocketClient(options?: {
 				data: { message: "Failed to send: " + (error as Error).message },
 			});
 		}
+	};
+
+	const sendPing = () => {
+		// Convenience method for JSON-RPC ping
+		sendMessage("ping", {});
 	};
 
 	const sendBatchMessage = (
@@ -523,6 +459,8 @@ export function useWebSocketClient(options?: {
 				timer.clearInterval(autoRequestIntervalRef.current);
 			if (dummyIntervalRef.current)
 				timer.clearInterval(dummyIntervalRef.current);
+			if (fastPingIntervalRef.current)
+				timer.clearInterval(fastPingIntervalRef.current);
 			if (reconnectTimeoutRef.current)
 				timer.clearTimeout(reconnectTimeoutRef.current);
 		};
@@ -544,6 +482,35 @@ export function useWebSocketClient(options?: {
 		bufferDropChunkSize,
 	]);
 
+	// Start/stop 100ms ping when enabled and connected (non-dummy)
+	useEffect(() => {
+		// clear any existing interval first
+		if (fastPingIntervalRef.current) {
+			timer.clearInterval(fastPingIntervalRef.current);
+			fastPingIntervalRef.current = null;
+		}
+
+		if (
+			fastPingEnabled &&
+			!dummyMode &&
+			status === "connected" &&
+			wsRef.current &&
+			wsRef.current.readyState === WebSocket.OPEN
+		) {
+			fastPingIntervalRef.current = timer.setInterval(() => {
+				// Use existing send flow to record messages/latency
+				sendPing();
+			}, 100);
+		}
+
+		return () => {
+			if (fastPingIntervalRef.current) {
+				timer.clearInterval(fastPingIntervalRef.current);
+				fastPingIntervalRef.current = null;
+			}
+		};
+	}, [fastPingEnabled, status, dummyMode]);
+
 	return {
 		url,
 		setUrl,
@@ -559,6 +526,9 @@ export function useWebSocketClient(options?: {
 		setBufferDropChunkSize,
 		dummyMode,
 		setDummyMode,
+		fastPingEnabled,
+		setFastPingEnabled,
+		sendPing,
 		connect,
 		disconnect,
 		sendMessage,

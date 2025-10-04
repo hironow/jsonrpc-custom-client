@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ResponseTimeHeatmap } from "@/components/response-time-heatmap";
 import { ConnectionQualityMonitor } from "@/components/connection-quality-monitor";
 import { MessageDetailSidebar } from "./message-detail-sidebar";
+import { PingStats } from "@/components/ping-stats";
+import { computePingStats } from "@/lib/ping-stats";
 import { findLinkedMessage } from "@/lib/message-link";
 import type { ConnectionStatus } from "@/types/connection";
 import type { Message } from "@/types/message";
@@ -44,6 +46,9 @@ export function WebSocketClient() {
 		setBufferPreferBatches,
 		bufferDropChunkSize,
 		setBufferDropChunkSize,
+		fastPingEnabled,
+		setFastPingEnabled,
+		sendPing,
 	} = useWebSocketClient();
 	const [autoScroll, setAutoScroll] = useState(true);
 	const [selectedMessageId, setSelectedMessageId] = useState<string | null>(
@@ -90,6 +95,7 @@ export function WebSocketClient() {
 		: null;
 
 	const notifications = messages.filter((m) => m.isNotification);
+	const pingStats = computePingStats(messages);
 
 	return (
 		<div className="flex flex-col h-screen bg-background">
@@ -164,6 +170,12 @@ export function WebSocketClient() {
 										onConnect={connect}
 										onDisconnect={disconnect}
 										onDummyModeChange={handleDummyModeToggle}
+										fastPingEnabled={fastPingEnabled}
+										onFastPingChange={setFastPingEnabled}
+										onPing={sendPing}
+										pingTotal={pingStats.totalPings}
+										pingMatched={pingStats.matched}
+										pingMissing={pingStats.missing}
 									/>
 									<RequestForm
 										disabled={status !== "connected"}
@@ -263,6 +275,7 @@ export function WebSocketClient() {
 											Lowering trims immediately.
 										</p>
 									</Card>
+									<PingStats messages={messages} />
 									<ResponseTimeHeatmap messages={messages} />
 									<ConnectionQualityMonitor
 										messages={messages}

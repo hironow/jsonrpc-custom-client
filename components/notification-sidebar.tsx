@@ -20,6 +20,12 @@ export function NotificationSidebar({
 	onSelectNotification,
 	onClose,
 }: NotificationSidebarProps) {
+	const attachTestIds =
+		process.env.NEXT_PUBLIC_E2E === "1" ||
+		process.env.NEXT_PUBLIC_E2E === "true";
+	const panelTestIdProps = attachTestIds
+		? { "data-testid": "notifications-panel" }
+		: {};
 	const formatTime = (date: Date) => {
 		return date.toLocaleTimeString("en-US", {
 			hour12: false,
@@ -43,7 +49,7 @@ export function NotificationSidebar({
 	};
 
 	return (
-		<Card className="h-full flex flex-col">
+		<Card className="h-full flex flex-col" {...panelTestIdProps}>
 			<CardHeader className="pb-2 border-b">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
@@ -79,6 +85,9 @@ export function NotificationSidebar({
 											? "bg-blue-500/10 border-blue-500 ring-1 ring-blue-500/50"
 											: "bg-card/50 hover:bg-card"
 									}`}
+									{...(attachTestIds
+										? { "data-testid": "notification-item" }
+										: {})}
 									onClick={() => onSelectNotification(notification.id)}
 								>
 									<div className="p-2">
