@@ -46,17 +46,30 @@ e2e-real ws_url='ws://localhost:9191/ws':
       fi
       echo "Starting local WS JSON-RPC server at :9191 ..."
       mkdir -p scripts/ws-jsonrpc-server/logs
-      (cd scripts/ws-jsonrpc-server && go mod download && go build -o server . && ./server --addr :9191 --path /ws) > scripts/ws-jsonrpc-server/logs/server.log 2>&1 &
+      (
+        cd scripts/ws-jsonrpc-server && \
+        GOSUMDB=off GOFLAGS= go mod download || true && \
+        GOSUMDB=off GOFLAGS= go build -o server . && \
+        ./server --addr :9191 --path /ws
+      ) > scripts/ws-jsonrpc-server/logs/server.log 2>&1 &
       srv_pid=$!
       started=1
       # Wait until port is open (max ~30s)
+      ready=0
       for i in {1..60}; do
         if port_open; then
           echo "WS server is up."
+          ready=1
           break
         fi
         sleep 0.5
       done
+      if [ "$ready" -ne 1 ]; then
+        echo "WS server failed to start on :9191 within timeout" >&2
+        echo "--- server.log (last 100 lines) ---" >&2
+        tail -n 100 scripts/ws-jsonrpc-server/logs/server.log >&2 || true
+        exit 1
+      fi
     fi
     set +e
     E2E_REAL_WS_URL={{ws_url}} pnpm run test:e2e
