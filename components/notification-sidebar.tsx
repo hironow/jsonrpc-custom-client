@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Bell, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { Message } from "./websocket-client"
+import type { Message } from "@/types/message"
 
 type NotificationSidebarProps = {
   notifications: Message[]

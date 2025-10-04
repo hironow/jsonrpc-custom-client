@@ -18,7 +18,9 @@ import {
   AlertCircle,
   AlertTriangle,
 } from "lucide-react"
-import type { Message } from "./websocket-client"
+import type { Message } from "@/types/message"
+import { escapeHtml } from "@/lib/html-escape"
+import { highlightEscapedJson } from "@/lib/json-highlight"
 
 type MessageDetailSidebarProps = {
   message: Message
@@ -102,14 +104,9 @@ export function MessageDetailSidebar({ message, onClose, linkedMessage }: Messag
     const jsonStr = JSON.stringify(data, null, 2)
 
     // Escape only HTML-significant characters to mitigate XSS while preserving quotes for highlighting
-    const safe = jsonStr.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const safe = escapeHtml(jsonStr)
 
-    const highlighted = safe
-      .replace(/\"([^\"]+)\":/g, '<span class="text-blue-400 font-medium">"$1"</span>:')
-      .replace(/: \"([^\"]*)\"/g, ': <span class="text-green-400">"$1"</span>')
-      .replace(/: (\\d+\\.?\\d*)/g, ': <span class="text-orange-400">$1</span>')
-      .replace(/: (true|false)/g, ': <span class="text-purple-400">$1</span>')
-      .replace(/: null/g, ': <span class="text-gray-500">null</span>')
+    const highlighted = highlightEscapedJson(safe)
 
     return <pre className="text-xs font-mono leading-relaxed" dangerouslySetInnerHTML={{ __html: highlighted }} />
   }

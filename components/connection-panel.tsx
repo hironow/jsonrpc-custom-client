@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Plug, PlugZap, AlertCircle, Loader2, TestTube, ChevronDown, ChevronUp } from "lucide-react"
-import type { ConnectionStatus } from "./websocket-client"
+import type { ConnectionStatus } from "@/types/connection"
 import { useState, useEffect } from "react"
 
 type ConnectionPanelProps = {

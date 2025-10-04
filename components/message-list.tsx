@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MessageItem } from "@/components/message-item"
 import { Trash2, ArrowDown, ArrowUp, Filter, Clock } from "lucide-react"
-import type { Message } from "./websocket-client"
+import type { Message } from "@/types/message"
+import { findLinkedMessage } from "@/lib/message-link"
 
 type MessageListProps = {
   messages: Message[]
@@ -123,19 +124,9 @@ export function MessageList({
     }
   })
 
-  const getLinkedMessage = (message: Message): Message | null => {
-    if (typeof message.data !== "object" || message.data?.id === undefined) return null
-
-    const id = message.data.id
-    const linkedMsg = messageMap.get(id)
-
-    if (!linkedMsg || linkedMsg.id === message.id) return null
-
-    if (message.type === "sent" && linkedMsg.type === "received") return linkedMsg
-    if (message.type === "received" && linkedMsg.type === "sent") return linkedMsg
-
-    return null
-  }
+  // Linking logic centralized in lib/message-link
+  const getLinkedMessage = (message: Message): Message | null =>
+    findLinkedMessage(messages, message as any) as Message | null
 
   const stats = {
     total: messages.length,

@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { BarChart3, CheckCircle2, XCircle, TrendingUp } from "lucide-react"
-import type { Message } from "./websocket-client"
+import type { Message } from "@/types/message"
 
 type MethodStatisticsProps = {
   messages: Message[]

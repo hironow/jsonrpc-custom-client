@@ -22,6 +22,8 @@ import {
 } from "@/lib/dummy-data-generator"
 import { MessageDetailSidebar } from "./message-detail-sidebar"
 import { validateJsonRpcMessage } from "@/lib/jsonrpc-validator"
+import { findLinkedMessage } from "@/lib/message-link"
+import type { ConnectionStatus } from "@/types/connection"
 
 export type Message = {
   id: string
@@ -39,8 +41,6 @@ export type Message = {
   validationErrors?: string[]
   validationWarnings?: string[]
 }
-
-export type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error"
 
 export function WebSocketClient() {
   const [url, setUrl] = useState("ws://localhost:8080")
@@ -517,25 +517,7 @@ export function WebSocketClient() {
 
   const selectedMessage = selectedMessageId ? messages.find((m) => m.id === selectedMessageId) : null
 
-  const getLinkedMessage = (message: Message): Message | null => {
-    if (message.linkedMessageId) {
-      return messages.find((m) => m.id === message.linkedMessageId) || null
-    }
-
-    if (typeof message.data !== "object" || message.data?.id === undefined) return null
-
-    const id = message.data.id
-    const linkedMsg = messages.find((m) => typeof m.data === "object" && m.data?.id === id && m.id !== message.id)
-
-    if (!linkedMsg) return null
-
-    if (message.type === "sent" && linkedMsg.type === "received") return linkedMsg
-    if (message.type === "received" && linkedMsg.type === "sent") return linkedMsg
-
-    return null
-  }
-
-  const linkedMessage = selectedMessage ? getLinkedMessage(selectedMessage) : null
+  const linkedMessage = selectedMessage ? (findLinkedMessage(messages, selectedMessage as any) as Message | null) : null
 
   const notifications = messages.filter((m) => m.isNotification)
 

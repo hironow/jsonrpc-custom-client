@@ -15,7 +15,7 @@ import {
   CheckCircle,
   AlertTriangle,
 } from "lucide-react"
-import type { Message } from "./websocket-client"
+import type { Message } from "@/types/message"
 
 type MessageItemProps = {
   message: Message

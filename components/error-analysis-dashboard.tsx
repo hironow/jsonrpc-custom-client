@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, AlertTriangle, CheckCircle2 } from "lucide-react"
-import type { Message } from "./websocket-client"
+import type { Message } from "@/types/message"
 
 type ErrorAnalysisDashboardProps = {
   messages: Message[]
