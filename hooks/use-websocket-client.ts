@@ -29,9 +29,16 @@ const defaultTimer: TimerLike = {
 	now: () => Date.now(),
 };
 
+type ReconnectOptions = {
+	baseMs?: number;
+	maxMs?: number;
+	jitter?: (delayMs: number, attempt: number) => number;
+};
+
 export function useWebSocketClient(options?: {
 	timer?: TimerLike;
 	wsFactory?: WebSocketFactory;
+	reconnect?: ReconnectOptions;
 }) {
 	const timer = options?.timer ?? defaultTimer;
 	const wsFactory = options?.wsFactory ?? ((u: string) => new WebSocket(u));
@@ -291,9 +298,13 @@ export function useWebSocketClient(options?: {
 				// schedule reconnect if enabled and not in dummy mode
 				if (shouldReconnectRef.current && !dummyMode) {
 					const attempt = reconnectAttemptsRef.current;
-					const base = 500;
-					const max = 4000;
-					const delay = Math.min(max, base * Math.pow(2, attempt));
+					const base = options?.reconnect?.baseMs ?? 500;
+					const max = options?.reconnect?.maxMs ?? 4000;
+					let delay = base * Math.pow(2, attempt);
+					if (typeof options?.reconnect?.jitter === "function") {
+						delay = options!.reconnect!.jitter!(delay, attempt);
+					}
+					delay = Math.min(max, Math.max(0, delay));
 					reconnectAttemptsRef.current = attempt + 1;
 					reconnectTimeoutRef.current = timer.setTimeout(() => {
 						// only attempt if still allowed to reconnect
