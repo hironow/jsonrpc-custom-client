@@ -48,6 +48,8 @@ export function WebSocketClient() {
 		setBufferDropChunkSize,
 		fastPingEnabled,
 		setFastPingEnabled,
+		fastPingIntervalMs,
+		setFastPingIntervalMs,
 		sendPing,
 	} = useWebSocketClient();
 	const [autoScroll, setAutoScroll] = useState(true);
@@ -172,6 +174,8 @@ export function WebSocketClient() {
 										onDummyModeChange={handleDummyModeToggle}
 										fastPingEnabled={fastPingEnabled}
 										onFastPingChange={setFastPingEnabled}
+										fastPingIntervalMs={fastPingIntervalMs}
+										onFastPingIntervalChange={setFastPingIntervalMs}
 										onPing={sendPing}
 										pingTotal={pingStats.totalPings}
 										pingMatched={pingStats.matched}

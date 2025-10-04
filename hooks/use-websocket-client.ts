@@ -56,8 +56,9 @@ export function useWebSocketClient(options?: {
 		useState<boolean>(false);
 	const [bufferDropChunkSize, setBufferDropChunkSize] = useState<number>(1);
 
-	// Fast ping toggle (disabled by default)
+	// Fast ping toggle + interval (disabled by default)
 	const [fastPingEnabled, setFastPingEnabled] = useState<boolean>(false);
+	const [fastPingIntervalMs, setFastPingIntervalMs] = useState<number>(100);
 
 	const wsRef = useRef<WebSocket | null>(null);
 	const messageIdCounter = useRef(1);
@@ -482,7 +483,7 @@ export function useWebSocketClient(options?: {
 		bufferDropChunkSize,
 	]);
 
-	// Start/stop 100ms ping when enabled and connected (non-dummy)
+	// Start/stop fast ping when enabled and connected (non-dummy)
 	useEffect(() => {
 		// clear any existing interval first
 		if (fastPingIntervalRef.current) {
@@ -497,10 +498,11 @@ export function useWebSocketClient(options?: {
 			wsRef.current &&
 			wsRef.current.readyState === WebSocket.OPEN
 		) {
+			const interval = Math.max(10, Math.min(60000, fastPingIntervalMs || 100));
 			fastPingIntervalRef.current = timer.setInterval(() => {
 				// Use existing send flow to record messages/latency
 				sendPing();
-			}, 100);
+			}, interval);
 		}
 
 		return () => {
@@ -509,7 +511,7 @@ export function useWebSocketClient(options?: {
 				fastPingIntervalRef.current = null;
 			}
 		};
-	}, [fastPingEnabled, status, dummyMode]);
+	}, [fastPingEnabled, status, dummyMode, fastPingIntervalMs]);
 
 	return {
 		url,
@@ -528,6 +530,8 @@ export function useWebSocketClient(options?: {
 		setDummyMode,
 		fastPingEnabled,
 		setFastPingEnabled,
+		fastPingIntervalMs,
+		setFastPingIntervalMs,
 		sendPing,
 		connect,
 		disconnect,
