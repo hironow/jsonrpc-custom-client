@@ -7,6 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
+	Tooltip,
+	TooltipTrigger,
+	TooltipContent,
+} from "@/components/ui/tooltip";
+import {
 	Plug,
 	PlugZap,
 	AlertCircle,
@@ -118,20 +123,38 @@ export function ConnectionPanel({
 							</Badge>
 						)}
 						{fastPingEnabled && (
-							<Badge variant="outline" className="text-[10px]">
-								<span className="w-2 h-2 rounded-full bg-primary mr-1.5 inline-block" />
-								Fast Ping
-							</Badge>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Badge
+										variant="outline"
+										className="text-[10px]"
+										data-testid="badge-fast-ping"
+									>
+										<span className="w-2 h-2 rounded-full bg-primary mr-1.5 inline-block" />
+										Fast Ping
+									</Badge>
+								</TooltipTrigger>
+								<TooltipContent side="bottom">
+									Fast 100ms ping is ON
+								</TooltipContent>
+							</Tooltip>
 						)}
 						{typeof pingTotal === "number" &&
 							typeof pingMatched === "number" && (
-								<Badge
-									variant="outline"
-									className="text-[10px]"
-									data-testid="badge-ping-collapsed"
-								>
-									Ping {pingMatched}/{pingTotal}
-								</Badge>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Badge
+											variant="outline"
+											className="text-[10px]"
+											data-testid="badge-ping-collapsed"
+										>
+											Ping {pingMatched}/{pingTotal}
+										</Badge>
+									</TooltipTrigger>
+									<TooltipContent side="bottom">
+										Ping matched/total. Missing = unanswered pings.
+									</TooltipContent>
+								</Tooltip>
 							)}
 					</div>
 					<div className="flex items-center gap-2">
@@ -225,7 +248,7 @@ export function ConnectionPanel({
 						id="fast-ping"
 						checked={!!fastPingEnabled}
 						onCheckedChange={onFastPingChange}
-						disabled={status !== "connected" || dummyMode}
+						disabled={status !== "connected"}
 					/>
 				</div>
 
@@ -235,15 +258,22 @@ export function ConnectionPanel({
 						data-testid="ping-inline"
 					>
 						<div className="text-xs text-muted-foreground">Ping</div>
-						<div className="text-xs font-mono text-foreground">
-							<span data-testid="ping-inline-matched">{pingMatched}</span>/
-							<span data-testid="ping-inline-total">{pingTotal}</span>
-							{typeof pingMissing === "number" && (
-								<span className="ml-2" data-testid="ping-inline-missing">
-									missing {pingMissing}
-								</span>
-							)}
-						</div>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<div className="text-xs font-mono text-foreground cursor-default">
+									<span data-testid="ping-inline-matched">{pingMatched}</span>/
+									<span data-testid="ping-inline-total">{pingTotal}</span>
+									{typeof pingMissing === "number" && (
+										<span className="ml-2" data-testid="ping-inline-missing">
+											missing {pingMissing}
+										</span>
+									)}
+								</div>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								Ping matched/total. Missing = unanswered pings.
+							</TooltipContent>
+						</Tooltip>
 					</div>
 				)}
 
