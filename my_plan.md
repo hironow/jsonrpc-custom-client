@@ -3,10 +3,12 @@
 This document is the up‑to‑date engineering plan and handover guide for the JSON‑RPC WebSocket client. It reflects what has been done, how to work in this repo (Tidy First → Tests), and what remains.
 
 **Stack & Scope**
+
 - App: Next.js + React (App Router)
 - Domain: JSON‑RPC 2.0 over WebSocket (single + batch), dummy stream mode, validation, buffering, linking, and visualization.
 
 **What’s New (since previous handover)**
+
 - RequestForm validation (behavioral + tests)
   - Zod schema for single and batch; UI surfaces method/params errors.
   - Unit tests added: tests/request-form.test.tsx.
@@ -42,10 +44,12 @@ This document is the up‑to‑date engineering plan and handover guide for the 
   - 付記: 拡張子を `.yaml` に統一（旧 `.yml` を排除）。
 
 **Tidying/Removals**
+
 - runn 関連（非実行ランブック、just レシピ）を撤去。シナリオは k6 のみ。
 - サンプル `scripts/test.js`（HTTP 負荷サンプル）を削除。
 
 **Current Architecture (Key Files)**
+
 - Types: `types/connection.ts` (ConnectionStatus), `types/message.ts` (Message)
 - Validation: `lib/jsonrpc-validator.ts`
 - Linking: `lib/message-link.ts` (request/response, batch linking)
@@ -58,19 +62,21 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Scenario/E2E: `tests/k6/*`, `e2e/*`
 
 **How We Work (AGENTS.md aligned)**
+
 - TDD: Red → Green → Refactor. Write the simplest failing test first.
 - Tidy First: separate structural vs. behavioral commits; run tests before/after structural changes.
 - Unit test conventions: flat tests, function‑based, no try/catch; share utilities only from `tests/utils/`.
 
 **How to Run**
-- Dev: `pnpm dev` → http://localhost:3000
+
+- Dev: `pnpm dev` → <http://localhost:3000>
   - Dummy Mode: Connection panel → Dummy Mode ON → Connect
   - Real WS: set URL (`NEXT_PUBLIC_WS_URL_DEFAULT` or UI) → Connect
 - Tests
   - Unit: `pnpm test:unit`
   - Scenario (k6, local):
     - 直接: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/basic-jsonrpc-ws.js`
-    - just: `just k6 ws_url="ws://localhost:9999/ws"`
+    - just: `just k6 ws_url="ws://localhost:9999/ws"`（全シナリオ）
     - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws`
     - タイムアウト: `K6_WS_TIMEOUT_MS`（既定 5000）。
   - E2E (local): `pnpm playwright:install` → `pnpm test:e2e`
@@ -81,32 +87,37 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 （現時点なし）
 
 **Quality Gates**
+
 - `pnpm tsc --noEmit` should pass (CI enforced).
 - `pnpm test:unit` must be green (CI enforced).
 - Lint must be clean (`pnpm lint`).
 - Format with Biome (`pnpm format` / `just format`).
 
 **Risks & Mitigations**
+
 - Timer/async flakiness → withFakeTimers + DI timers; keep tests deterministic.
 - WebSocket env variance → DI wsFactory; use Dummy Mode for local/e2e stability first.
 - Large payload UI perf → keep buffer limit sane, consider presets (docs/strategy-presets.md).
 
 **Troubleshooting**
+
 - JSDOM lacks `crypto.randomUUID` → stub in tests (see use‑websocket tests).
 - “Multiple elements found” in RTL queries → prefer role/name queries or `getAllBy*` where appropriate.
 - Playwright “Connecting…” assertion flakiness → use partial text regex (/Connecting/).
 
 **Commit & Review Checklist**
+
 - Single logical change per commit; structural vs behavioral are separate.
 - Tests added/updated; all tests pass locally.
 - Lint/TS clean; Biome formatted.
 - PR description states Red/Green/Refactor and scope.
 
 **Quick Commands**
+
 - Dev: `pnpm dev`
 - Unit: `pnpm test:unit`
 - E2E (local): `pnpm playwright:install && pnpm test:e2e`
 - CI (local): `just test-ci`
 - Format/Lint: `just format && just lint`
 
-以上。次の着手は「Scenario coverage（k6）をRedから追加」を推奨します。小さくシナリオを書き、必要に応じて補助的なユーティリティを整備（Tidy First）してください。
+以上。
