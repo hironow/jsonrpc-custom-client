@@ -22,17 +22,26 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Virtualization (tests)
   - Extreme payload/batch tests ensure height heuristics are capped and step as designed: tests/virtual-estimate.test.ts.
 - Scenario/E2E scaffolding
-  - Scenario (k6): tests/k6/* (not executed in CI by default).
-  - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts (Dummy Mode connect flow). Local only.
+  - Scenario (k6): tests/k6/* に統一。通知（idなし）を無視し、応答のみを検証するロジックを実装。
+  - npm scripts: `k6:ws`, `k6:cloud`, `k6:archive` を追加（`K6_WS_URL`, `K6_WS_TIMEOUT_MS` 対応）。
+  - just recipes: `just k6`, `just k6-local` を追加（`K6_WS_TIMEOUT_MS` 既定 5000ms）。
+  - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts（Dummy Mode connect flow）。
 - CI
-  - .github/workflows/ci.yaml runs: pnpm install, pnpm tsc --noEmit, pnpm test:unit. pnpm cache enabled.
-  - justfile `test-ci` alias.
+  - .github/workflows/ci.yaml: pnpm install → typecheck/unit → E2E → k6-local（Grafana k6 v1.3.0）→ build。
+  - k6 セットアップ: grafana/setup-k6-action@v0（version: v1.3.0）。
+  - k6 ローカル実行: `just k6-local`（付属 Go WS サーバ起動→k6 実行→停止）。
+  - justfile `test-ci` alias（型チェック＋ユニット）。
 - Formatting/Lint
   - Biome formatter: .biome.json, `pnpm run format` / `just format`.
   - ESLint via Next: `pnpm run lint` / `just lint`.
 - Docs
-  - README: CSP guidance、Scenario/E2Eの実行手順を追記。
+  - README: CSP guidance、k6/Playwright の実行手順、クラウド実行、タイムアウト設定を追記。
   - docs/strategy-presets.md: バッファ戦略プリセットを追加。
+  - 付記: 拡張子を `.yaml` に統一（旧 `.yml` を排除）。
+
+**Tidying/Removals**
+- runn 関連（非実行ランブック、just レシピ）を撤去。シナリオは k6 のみ。
+- サンプル `scripts/test.js`（HTTP 負荷サンプル）を削除。
 
 **Current Architecture (Key Files)**
 - Types: `types/connection.ts` (ConnectionStatus), `types/message.ts` (Message)
@@ -57,15 +66,19 @@ This document is the up‑to‑date engineering plan and handover guide for the 
   - Real WS: set URL (`NEXT_PUBLIC_WS_URL_DEFAULT` or UI) → Connect
 - Tests
   - Unit: `pnpm test:unit`
-  - Scenario (manual): edit/run under `tests/k6/`
+  - Scenario (k6, local):
+    - 直接: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/basic-jsonrpc-ws.js`
+    - just: `just k6 ws_url="ws://localhost:9999/ws"`
+    - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws`
+    - タイムアウト: `K6_WS_TIMEOUT_MS`（既定 5000）。
   - E2E (local): `pnpm playwright:install` → `pnpm test:e2e`
 - CI (local equivalent): `just test-ci`
 - Format/Lint: `just format` / `just lint`
 
 **Backlog (Prioritized, TDD‑first)**
 1) Scenario coverage (k6)
-   - Add k6 WS scenarios for: batch request end‑to‑end, error responses, notification streams.
-   - Keep realistic; does not need full unit coverage.
+   - 追加: バッチ応答、エラー応答、通知ストリームの k6 シナリオ。
+   - 方針: 現実的な最小ケースを優先（ユニット並の網羅性は不要）。
 
 **Quality Gates**
 - `pnpm tsc --noEmit` should pass (CI enforced).
