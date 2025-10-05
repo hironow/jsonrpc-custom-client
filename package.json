@@ -87,11 +87,17 @@
 		"format": "biome format --write app components hooks lib tests types docs e2e styles",
 		"k6:ws": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run ./tests/k6/basic-jsonrpc-ws.js",
 		"k6:cloud": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 cloud ./tests/k6/basic-jsonrpc-ws.js",
-		"k6:archive": "k6 archive ./tests/k6/basic-jsonrpc-ws.js -O script.tar"
-		,
+		"k6:archive": "k6 archive ./tests/k6/basic-jsonrpc-ws.js -O script.tar",
 		"k6:ws:batch": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run ./tests/k6/batch-jsonrpc-ws.js",
 		"k6:ws:error": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run ./tests/k6/error-jsonrpc-ws.js",
-		"k6:ws:notify": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run ./tests/k6/notification-stream-ws.js"
+		"k6:ws:notify": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run ./tests/k6/notification-stream-ws.js",
+		"k6:ws:large-batch": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run ./tests/k6/large-batch-jsonrpc-ws.js",
+		"k6:ws:latency": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run ./tests/k6/latency-jsonrpc-ws.js",
+		"k6:cloud:batch": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 cloud ./tests/k6/batch-jsonrpc-ws.js",
+		"k6:cloud:error": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 cloud ./tests/k6/error-jsonrpc-ws.js",
+		"k6:cloud:notify": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 cloud ./tests/k6/notification-stream-ws.js",
+		"k6:cloud:large-batch": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 cloud ./tests/k6/large-batch-jsonrpc-ws.js",
+		"k6:cloud:latency": "K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 cloud ./tests/k6/latency-jsonrpc-ws.js"
 	},
 	"packageManager": "pnpm@10.18.0+sha512.e804f889f1cecc40d572db084eec3e4881739f8dec69c0ff10d2d1beff9a4e309383ba27b5b750059d7f4c149535b6cd0d2cb1ed3aeb739239a4284a68f40cfa"
 }

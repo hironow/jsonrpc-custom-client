@@ -131,42 +131,23 @@ deploy-ws-server service_name='jsonrpc-ws' region='asia-northeast1' concurrency=
     URL=$(gcloud run services describe "${SVC}" --region "${REGION}" --format='value(status.url)')
     echo "   ${URL}/ws"
 
-# k6: WebSocket scenario
-k6 ws_url='ws://localhost:9999/ws':
+# k6: Run all WS scenarios against a target URL
+k6 ws_url:
     #!/usr/bin/env bash
     set -euo pipefail
     if ! command -v k6 >/dev/null 2>&1; then
       echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
       exit 1
     fi
+    # Core scenarios
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/basic-jsonrpc-ws.js
-
-k6-batch ws_url='ws://localhost:9999/ws':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v k6 >/dev/null 2>&1; then
-      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
-      exit 1
-    fi
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/batch-jsonrpc-ws.js
-
-k6-error ws_url='ws://localhost:9999/ws':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v k6 >/dev/null 2>&1; then
-      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
-      exit 1
-    fi
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/error-jsonrpc-ws.js
-
-k6-notify ws_url='ws://localhost:9999/ws':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v k6 >/dev/null 2>&1; then
-      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
-      exit 1
-    fi
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/notification-stream-ws.js
+    # Extended scenarios
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/large-batch-jsonrpc-ws.js
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/latency-jsonrpc-ws.js
+
 
 k6-local ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash
@@ -229,177 +210,6 @@ k6-local ws_url='ws://localhost:9999/ws':
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/batch-jsonrpc-ws.js
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/error-jsonrpc-ws.js
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/notification-stream-ws.js
-
-k6-local-batch ws_url='ws://localhost:9999/ws':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cleanup() {
-      if [ "${started:-0}" -eq 1 ] && [ -n "${srv_pid:-}" ]; then
-        if kill -0 "$srv_pid" >/dev/null 2>&1; then
-          echo "Stopping WS server (pid $srv_pid)..."
-          kill "$srv_pid" >/dev/null 2>&1 || true
-          wait "$srv_pid" >/dev/null 2>&1 || true
-        fi
-      fi
-    }
-    trap cleanup EXIT INT TERM
-    started=0
-    port_open() {
-      if command -v nc >/dev/null 2>&1; then
-        nc -z 127.0.0.1 9999 >/dev/null 2>&1
-      else
-        (echo >/dev/tcp/127.0.0.1/9999) >/dev/null 2>&1 || return 1
-      fi
-    }
-    if ! port_open; then
-      if ! command -v go >/dev/null 2>&1; then
-        echo "Go not found (required to run local WS server)." >&2
-        exit 1
-      fi
-      echo "Starting local WS JSONRPC server at :9999 ..."
-      mkdir -p scripts/ws-jsonrpc-server/logs
-      sh -c '
-        set -e
-        cd scripts/ws-jsonrpc-server
-        GOSUMDB=off GOFLAGS= go mod download || true
-        GOSUMDB=off GOFLAGS= go build -o server .
-        exec ./server --addr :9999 --path /ws
-      ' > scripts/ws-jsonrpc-server/logs/server.log 2>&1 & srv_pid=$!
-      started=1
-      ready=0
-      for i in {1..60}; do
-        if port_open; then
-          echo "WS server is up."
-          ready=1
-          break
-        fi
-        sleep 0.5
-      done
-      if [ "$ready" -ne 1 ]; then
-        echo "WS server failed to start on :9999 within timeout" >&2
-        echo "--- server.log (last 100 lines) ---" >&2
-        tail -n 100 scripts/ws-jsonrpc-server/logs/server.log >&2 || true
-        exit 1
-      fi
-    fi
-    if ! command -v k6 >/dev/null 2>&1; then
-      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
-      exit 1
-    fi
-    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/batch-jsonrpc-ws.js
-
-k6-local-error ws_url='ws://localhost:9999/ws':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cleanup() {
-      if [ "${started:-0}" -eq 1 ] && [ -n "${srv_pid:-}" ]; then
-        if kill -0 "$srv_pid" >/dev/null 2>&1; then
-          echo "Stopping WS server (pid $srv_pid)..."
-          kill "$srv_pid" >/dev/null 2>&1 || true
-          wait "$srv_pid" >/dev/null 2>&1 || true
-        fi
-      fi
-    }
-    trap cleanup EXIT INT TERM
-    started=0
-    port_open() {
-      if command -v nc >/dev/null 2>&1; then
-        nc -z 127.0.0.1 9999 >/dev/null 2>&1
-      else
-        (echo >/dev/tcp/127.0.0.1/9999) >/dev/null 2>&1 || return 1
-      fi
-    }
-    if ! port_open; then
-      if ! command -v go >/dev/null 2>&1; then
-        echo "Go not found (required to run local WS server)." >&2
-        exit 1
-      fi
-      echo "Starting local WS JSONRPC server at :9999 ..."
-      mkdir -p scripts/ws-jsonrpc-server/logs
-      sh -c '
-        set -e
-        cd scripts/ws-jsonrpc-server
-        GOSUMDB=off GOFLAGS= go mod download || true
-        GOSUMDB=off GOFLAGS= go build -o server .
-        exec ./server --addr :9999 --path /ws
-      ' > scripts/ws-jsonrpc-server/logs/server.log 2>&1 & srv_pid=$!
-      started=1
-      ready=0
-      for i in {1..60}; do
-        if port_open; then
-          echo "WS server is up."
-          ready=1
-          break
-        fi
-        sleep 0.5
-      done
-      if [ "$ready" -ne 1 ]; then
-        echo "WS server failed to start on :9999 within timeout" >&2
-        echo "--- server.log (last 100 lines) ---" >&2
-        tail -n 100 scripts/ws-jsonrpc-server/logs/server.log >&2 || true
-        exit 1
-      fi
-    fi
-    if ! command -v k6 >/dev/null 2>&1; then
-      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
-      exit 1
-    fi
-    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/error-jsonrpc-ws.js
-
-k6-local-notify ws_url='ws://localhost:9999/ws':
-    #!/usr/bin/env bash
-    set -euo pipefail
-    cleanup() {
-      if [ "${started:-0}" -eq 1 ] && [ -n "${srv_pid:-}" ]; then
-        if kill -0 "$srv_pid" >/dev/null 2>&1; then
-          echo "Stopping WS server (pid $srv_pid)..."
-          kill "$srv_pid" >/dev/null 2>&1 || true
-          wait "$srv_pid" >/dev/null 2>&1 || true
-        fi
-      fi
-    }
-    trap cleanup EXIT INT TERM
-    started=0
-    port_open() {
-      if command -v nc >/dev/null 2>&1; then
-        nc -z 127.0.0.1 9999 >/dev/null 2>&1
-      else
-        (echo >/dev/tcp/127.0.0.1/9999) >/dev/null 2>&1 || return 1
-      fi
-    }
-    if ! port_open; then
-      if ! command -v go >/dev/null 2>&1; then
-        echo "Go not found (required to run local WS server)." >&2
-        exit 1
-      fi
-      echo "Starting local WS JSONRPC server at :9999 ..."
-      mkdir -p scripts/ws-jsonrpc-server/logs
-      sh -c '
-        set -e
-        cd scripts/ws-jsonrpc-server
-        GOSUMDB=off GOFLAGS= go mod download || true
-        GOSUMDB=off GOFLAGS= go build -o server .
-        exec ./server --addr :9999 --path /ws
-      ' > scripts/ws-jsonrpc-server/logs/server.log 2>&1 & srv_pid=$!
-      started=1
-      ready=0
-      for i in {1..60}; do
-        if port_open; then
-          echo "WS server is up."
-          ready=1
-          break
-        fi
-        sleep 0.5
-      done
-      if [ "$ready" -ne 1 ]; then
-        echo "WS server failed to start on :9999 within timeout" >&2
-        echo "--- server.log (last 100 lines) ---" >&2
-        tail -n 100 scripts/ws-jsonrpc-server/logs/server.log >&2 || true
-        exit 1
-      fi
-    fi
-    if ! command -v k6 >/dev/null 2>&1; then
-      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
-      exit 1
-    fi
-    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/notification-stream-ws.js
+    # Extended scenarios
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/large-batch-jsonrpc-ws.js
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/latency-jsonrpc-ws.js
