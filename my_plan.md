@@ -22,10 +22,10 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Virtualization (tests)
   - Extreme payload/batch tests ensure height heuristics are capped and step as designed: tests/virtual-estimate.test.ts.
 - Scenario/E2E scaffolding
-  - Scenario (runn): tests/runn/basic.jsonrpc.yml (agent perspective; not executed in CI).
+  - Scenario (k6): tests/k6/* (not executed in CI by default).
   - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts (Dummy Mode connect flow). Local only.
 - CI
-  - .github/workflows/ci.yml runs: pnpm install, pnpm tsc --noEmit, pnpm test:unit. pnpm cache enabled.
+  - .github/workflows/ci.yaml runs: pnpm install, pnpm tsc --noEmit, pnpm test:unit. pnpm cache enabled.
   - justfile `test-ci` alias.
 - Formatting/Lint
   - Biome formatter: .biome.json, `pnpm run format` / `just format`.
@@ -44,7 +44,7 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Hook: `hooks/use-websocket-client.ts` (timers/WS DI, buffer, validation, reconnect)
 - UI: `components/websocket-client.tsx`, `components/message-list.tsx`, `components/request-form.tsx`, etc.
 - Tests: `tests/**/*.test.ts[x]` (Vitest)＋`tests/utils/timers.ts` (fake timers helper)
-- Scenario/E2E: `tests/runn/*`, `e2e/*`
+- Scenario/E2E: `tests/k6/*`, `e2e/*`
 
 **How We Work (AGENTS.md aligned)**
 - TDD: Red → Green → Refactor. Write the simplest failing test first.
@@ -57,14 +57,14 @@ This document is the up‑to‑date engineering plan and handover guide for the 
   - Real WS: set URL (`NEXT_PUBLIC_WS_URL_DEFAULT` or UI) → Connect
 - Tests
   - Unit: `pnpm test:unit`
-  - Scenario (manual): edit/run under `tests/runn/`
+  - Scenario (manual): edit/run under `tests/k6/`
   - E2E (local): `pnpm playwright:install` → `pnpm test:e2e`
 - CI (local equivalent): `just test-ci`
 - Format/Lint: `just format` / `just lint`
 
 **Backlog (Prioritized, TDD‑first)**
-1) Scenario coverage (runn)
-   - Add scenarios for: batch request end‑to‑end, error responses, notification streams.
+1) Scenario coverage (k6)
+   - Add k6 WS scenarios for: batch request end‑to‑end, error responses, notification streams.
    - Keep realistic; does not need full unit coverage.
 
 **Quality Gates**
@@ -96,4 +96,4 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - CI (local): `just test-ci`
 - Format/Lint: `just format && just lint`
 
-以上。次の着手は「Scenario coverage（runn）をRedから追加」を推奨します。小さくシナリオを書き、必要に応じて補助的なユーティリティを整備（Tidy First）してください。
+以上。次の着手は「Scenario coverage（k6）をRedから追加」を推奨します。小さくシナリオを書き、必要に応じて補助的なユーティリティを整備（Tidy First）してください。

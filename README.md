@@ -56,9 +56,24 @@ These boundaries are intentionally left to the application/operator policy. If y
 - Node’s built‑in test runner is used for small utilities: `npm test`.
 - WebSocket/dummy‑stream logic lives in `hooks/use-websocket-client.ts` and is tested with DI (timers/WebSocket factory) for determinism.
 
-### Scenario Tests (runn)
+### Scenario Tests (k6)
 
-Scenario tests under `tests/runn/` describe realistic agent flows (A2A) using JSON‑RPC 2.0 over WebSocket from the agent perspective. They complement unit/integration tests and are not executed in CI by default. See `tests/runn/basic.jsonrpc.yml` for a starter.
+For JSON‑RPC over WebSocket scenarios, use k6 (native WS support). Scenarios live under `tests/k6/`.
+
+- Install k6 (one-time):
+  - macOS: `brew install k6`
+  - Others: https://k6.io/docs/getting-started/installation/
+- Target URL: set `K6_WS_URL` (defaults to `ws://localhost:9999/ws`).
+  - Example: `export K6_WS_URL=ws://localhost:9999/ws`
+- Run: `k6 run tests/k6/basic-jsonrpc-ws.js` or `just k6 ws_url="ws://localhost:9999/ws"`
+
+Local server helper (optional):
+
+- Start local Go server and run k6 in one go: `just k6-local`
+  - Starts `scripts/ws-jsonrpc-server` on `:9999` (path `/ws`), waits for readiness, then runs the k6 scenario with `K6_WS_URL=ws://localhost:9999/ws`.
+  - Stop is automatic on exit (idempotent).
+
+ 
 
 ### E2E Tests
 

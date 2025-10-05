@@ -106,13 +106,16 @@
         <rule>Avoid using overly large mocks. Prefer real code over mocks</rule>
     </unittest-guidelines>
 
-    <runn-settings>
-        <title>tests/runn/ DIRS' SETTINGS GUIDELINES</title>
-        <reference url="https://deepwiki.com/k1LoW/runn">Based on runn for scenario-based testing</reference>
-        <guideline>Scenarios are realistic and don't require same coverage as unit/integration tests</guideline>
-        <guideline>A2A protocol compliance with JSONRPC specification</guideline>
-        <guideline>Scenario tests should describe AI Agent actions from Agent perspective</guideline>
-    </runn-settings>
+    
+
+    <k6-settings>
+        <title>tests/k6/ DIRS' SETTINGS GUIDELINES</title>
+        <reference url="https://k6.io/docs/">k6 is used for executable WebSocket scenarios</reference>
+        <guideline>Prefer k6 for JSON‑RPC over WebSocket scenario execution</guideline>
+        <guideline>Target URL is provided via K6_WS_URL (defaults to ws://localhost:9999/ws)</guideline>
+        <guideline>Keep scenarios realistic and focused on protocol behavior rather than full UI flows</guideline>
+        <guideline>Use just recipes: `just k6` / `just k6-local` for local runs</guideline>
+    </k6-settings>
 
     <workflow>
         <title>EXAMPLE WORKFLOW</title>
