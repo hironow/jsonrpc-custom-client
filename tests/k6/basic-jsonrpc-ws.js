@@ -35,16 +35,22 @@ export default function () {
 
 			socket.on("message", function (data) {
 				try {
-					const msg = JSON.parse(data);
-					// Accept single-object or array; validate jsonrpc, id, and result|error
-					const first = Array.isArray(msg) ? msg[0] : msg;
+					const parsed = JSON.parse(data);
+					const arr = Array.isArray(parsed) ? parsed : [parsed];
+					// Find a response (has id). Ignore notifications (no id).
+					const resp = arr.find(
+						(m) =>
+							m &&
+							typeof m === "object" &&
+							Object.prototype.hasOwnProperty.call(m, "id"),
+					);
+					if (!resp) return; // not a response; keep waiting
 					const ok =
-						first &&
-						first.jsonrpc === "2.0" &&
-						String(first.id) === String(request.id) &&
-						(Object.prototype.hasOwnProperty.call(first, "result") ||
-							Object.prototype.hasOwnProperty.call(first, "error"));
-					check(first, {
+						resp.jsonrpc === "2.0" &&
+						String(resp.id) === String(request.id) &&
+						(Object.prototype.hasOwnProperty.call(resp, "result") ||
+							Object.prototype.hasOwnProperty.call(resp, "error"));
+					check(resp, {
 						"jsonrpc == 2.0": (m) => m && m.jsonrpc === "2.0",
 						"id matches": (m) => m && String(m.id) === String(request.id),
 						"has result or error": (m) =>
@@ -53,10 +59,10 @@ export default function () {
 								Object.prototype.hasOwnProperty.call(m, "error")),
 					});
 					gotResponse = ok;
+					// Close only after we saw the matching response
+					socket.close();
 				} catch (e) {
 					// ignore non-JSON messages
-				} finally {
-					socket.close();
 				}
 			});
 

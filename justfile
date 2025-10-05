@@ -139,7 +139,7 @@ k6 ws_url='ws://localhost:9999/ws':
       echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
       exit 1
     fi
-    K6_WS_URL={{ws_url}} k6 run tests/k6/basic-jsonrpc-ws.js
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/basic-jsonrpc-ws.js
 
 k6-local ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash
@@ -197,4 +197,4 @@ k6-local ws_url='ws://localhost:9999/ws':
       echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
       exit 1
     fi
-    K6_WS_URL={{ws_url}} k6 run tests/k6/basic-jsonrpc-ws.js
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/basic-jsonrpc-ws.js
