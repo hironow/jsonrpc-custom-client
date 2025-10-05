@@ -24,8 +24,9 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Scenario/E2E scaffolding
   - Scenario (k6): tests/k6/* に統一。通知（idなし）を無視し、応答のみを検証するロジックを実装。
     - 追加: `basic-jsonrpc-ws.js`（単発 ping）、`batch-jsonrpc-ws.js`（バッチ）、`error-jsonrpc-ws.js`（エラー応答）、`notification-stream-ws.js`（通知ストリーム）。
-  - npm scripts: `k6:ws`, `k6:cloud`, `k6:archive` を追加（`K6_WS_URL`, `K6_WS_TIMEOUT_MS` 対応）。
-  - just recipes: `just k6`, `just k6-local` を追加（`K6_WS_TIMEOUT_MS` 既定 5000ms）。
+    - 追加（拡張）: `large-batch-jsonrpc-ws.js`（大規模バッチ; サイズ/ペイロード可変）, `latency-jsonrpc-ws.js`（遅延計測; Trend `ws_resp_time_ms` + p95 閾値）。
+  - npm scripts: `k6:ws`, `k6:cloud`, `k6:archive` に加え、`k6:ws:large-batch`, `k6:ws:latency` を追加。
+  - just recipes: `just k6`（引数 `ws_url` 必須・全シナリオ実行）、`just k6-local`（ローカルWS起動後に全シナリオ実行）。
   - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts（Dummy Mode connect flow）。
 - CI
   - .github/workflows/ci.yaml: pnpm install → typecheck/unit → E2E → k6-local（Grafana k6 1.3.0）→ build。
@@ -77,9 +78,7 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Format/Lint: `just format` / `just lint`
 
 **Backlog (Prioritized, TDD‑first)**
-1) k6 Cloud 実行手順とシナリオ拡張（未了）
-   - 実環境向け（公開 WS）での cloud 実行手順を README に明記（`npm run k6:cloud` / `just k6` での `K6_WS_URL`/`K6_WS_TIMEOUT_MS` 設定例）。
-   - より大きなバッチ/遅延ケースのシナリオを追加（任意、負荷の現実性を優先）。
+（現時点なし）
 
 **Quality Gates**
 - `pnpm tsc --noEmit` should pass (CI enforced).

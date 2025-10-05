@@ -71,41 +71,47 @@ For JSON‑RPC over WebSocket scenarios, use k6 (native WS support). Scenarios l
 Local run:
 
 - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/basic-jsonrpc-ws.js`
-- With just: `just k6 ws_url="ws://localhost:9999/ws"`
-- With npm script: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws`
+- With just (all scenarios): `just k6 ws_url="ws://localhost:9999/ws"`
+- With npm script (single scenario): `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws`
 
 Additional scenarios:
 
 - Batch
   - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/batch-jsonrpc-ws.js`
-  - just: `just k6-batch ws_url="ws://localhost:9999/ws"`
   - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:batch`
 - Error response
   - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/error-jsonrpc-ws.js`
-  - just: `just k6-error ws_url="ws://localhost:9999/ws"`
   - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:error`
 - Notification stream
   - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/notification-stream-ws.js`
-  - just: `just k6-notify ws_url="ws://localhost:9999/ws"`
   - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:notify`
 - Large batch (config: `K6_BATCH_SIZE`, `K6_PAYLOAD_KB`, `K6_WS_TIMEOUT_MS`)
   - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/large-batch-jsonrpc-ws.js`
-  - just: `just k6-large-batch ws_url="ws://localhost:9999/ws"`
   - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:large-batch`
 - Latency (records Trend metric `ws_resp_time_ms`; config: `K6_LATENCY_REQS`, `K6_LATENCY_GAP_MS`, `K6_PAYLOAD_KB`, `K6_P95_MS`, `K6_WS_TIMEOUT_MS`)
   - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/latency-jsonrpc-ws.js`
-  - just: `just k6-latency ws_url="ws://localhost:9999/ws"`
   - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:latency`
 
 Cloud run (public WS only):
 
-- Direct: `K6_WS_URL=wss://your-server/ws k6 cloud ./tests/k6/basic-jsonrpc-ws.js`
-- With npm script: `K6_WS_URL=wss://your-server/ws npm run k6:cloud`
-- Archive alternative: `npm run k6:archive` → `k6 cloud -e K6_WS_URL=wss://your-server/ws script.tar`
+- Basics
+  - Direct: `k6 cloud ./tests/k6/basic-jsonrpc-ws.js -e K6_WS_URL=wss://your-server/ws -e K6_WS_TIMEOUT_MS=5000`
+  - With npm: `K6_WS_URL=wss://your-server/ws npm run k6:cloud`
+  - Archive: `npm run k6:archive` → `k6 cloud -e K6_WS_URL=wss://your-server/ws script.tar`
+  - Note: Use `-e NAME=VALUE` to pass env to k6 Cloud, or export env before invoking.
+
+- Other scenarios (examples)
+  - Batch: `k6 cloud ./tests/k6/batch-jsonrpc-ws.js -e K6_WS_URL=wss://your-server/ws -e K6_WS_TIMEOUT_MS=5000`
+  - Error: `k6 cloud ./tests/k6/error-jsonrpc-ws.js -e K6_WS_URL=wss://your-server/ws -e K6_WS_TIMEOUT_MS=5000`
+  - Notification: `k6 cloud ./tests/k6/notification-stream-ws.js -e K6_WS_URL=wss://your-server/ws -e K6_WS_TIMEOUT_MS=5000`
+  - Large batch: `k6 cloud ./tests/k6/large-batch-jsonrpc-ws.js -e K6_WS_URL=wss://your-server/ws -e K6_BATCH_SIZE=200 -e K6_PAYLOAD_KB=2 -e K6_WS_TIMEOUT_MS=20000`
+  - Latency: `k6 cloud ./tests/k6/latency-jsonrpc-ws.js -e K6_WS_URL=wss://your-server/ws -e K6_LATENCY_REQS=50 -e K6_LATENCY_GAP_MS=100 -e K6_P95_MS=1500 -e K6_PAYLOAD_KB=1 -e K6_WS_TIMEOUT_MS=10000`
+
+Tip: k6 Cloud requires your WS endpoint to be reachable over the internet (e.g., `wss://`). Self‑signed or private endpoints will fail TLS/handshake.
 
 Local server helper (optional):
 
-- Start local Go server and run k6 in one go: `just k6-local`
+- Start local Go server and run all k6 scenarios in one go: `just k6-local`
   - Starts `scripts/ws-jsonrpc-server` on `:9999` (path `/ws`), waits for readiness, then runs the k6 scenario with `K6_WS_URL=ws://localhost:9999/ws`.
   - Stop is automatic on exit (idempotent).
 
