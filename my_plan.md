@@ -22,17 +22,27 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Virtualization (tests)
   - Extreme payload/batch tests ensure height heuristics are capped and step as designed: tests/virtual-estimate.test.ts.
 - Scenario/E2E scaffolding
-  - Scenario (runn): tests/runn/basic.jsonrpc.yml (agent perspective; not executed in CI).
-  - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts (Dummy Mode connect flow). Local only.
+  - Scenario (k6): tests/k6/* に統一。通知（idなし）を無視し、応答のみを検証するロジックを実装。
+    - 追加: `basic-jsonrpc-ws.js`（単発 ping）、`batch-jsonrpc-ws.js`（バッチ）、`error-jsonrpc-ws.js`（エラー応答）、`notification-stream-ws.js`（通知ストリーム）。
+  - npm scripts: `k6:ws`, `k6:cloud`, `k6:archive` を追加（`K6_WS_URL`, `K6_WS_TIMEOUT_MS` 対応）。
+  - just recipes: `just k6`, `just k6-local` を追加（`K6_WS_TIMEOUT_MS` 既定 5000ms）。
+  - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts（Dummy Mode connect flow）。
 - CI
-  - .github/workflows/ci.yml runs: pnpm install, pnpm tsc --noEmit, pnpm test:unit. pnpm cache enabled.
-  - justfile `test-ci` alias.
+  - .github/workflows/ci.yaml: pnpm install → typecheck/unit → E2E → k6-local（Grafana k6 v1.3.0）→ build。
+  - k6 セットアップ: grafana/setup-k6-action@v0（version: v1.3.0）。
+  - k6 ローカル実行: `just k6-local`（付属 Go WS サーバ起動→k6 実行→停止）。
+  - justfile `test-ci` alias（型チェック＋ユニット）。
 - Formatting/Lint
   - Biome formatter: .biome.json, `pnpm run format` / `just format`.
   - ESLint via Next: `pnpm run lint` / `just lint`.
 - Docs
-  - README: CSP guidance、Scenario/E2Eの実行手順を追記。
+  - README: CSP guidance、k6/Playwright の実行手順、クラウド実行、タイムアウト設定を追記。
   - docs/strategy-presets.md: バッファ戦略プリセットを追加。
+  - 付記: 拡張子を `.yaml` に統一（旧 `.yml` を排除）。
+
+**Tidying/Removals**
+- runn 関連（非実行ランブック、just レシピ）を撤去。シナリオは k6 のみ。
+- サンプル `scripts/test.js`（HTTP 負荷サンプル）を削除。
 
 **Current Architecture (Key Files)**
 - Types: `types/connection.ts` (ConnectionStatus), `types/message.ts` (Message)
@@ -44,7 +54,7 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Hook: `hooks/use-websocket-client.ts` (timers/WS DI, buffer, validation, reconnect)
 - UI: `components/websocket-client.tsx`, `components/message-list.tsx`, `components/request-form.tsx`, etc.
 - Tests: `tests/**/*.test.ts[x]` (Vitest)＋`tests/utils/timers.ts` (fake timers helper)
-- Scenario/E2E: `tests/runn/*`, `e2e/*`
+- Scenario/E2E: `tests/k6/*`, `e2e/*`
 
 **How We Work (AGENTS.md aligned)**
 - TDD: Red → Green → Refactor. Write the simplest failing test first.
@@ -57,38 +67,19 @@ This document is the up‑to‑date engineering plan and handover guide for the 
   - Real WS: set URL (`NEXT_PUBLIC_WS_URL_DEFAULT` or UI) → Connect
 - Tests
   - Unit: `pnpm test:unit`
-  - Scenario (manual): edit/run under `tests/runn/`
+  - Scenario (k6, local):
+    - 直接: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/basic-jsonrpc-ws.js`
+    - just: `just k6 ws_url="ws://localhost:9999/ws"`
+    - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws`
+    - タイムアウト: `K6_WS_TIMEOUT_MS`（既定 5000）。
   - E2E (local): `pnpm playwright:install` → `pnpm test:e2e`
 - CI (local equivalent): `just test-ci`
 - Format/Lint: `just format` / `just lint`
 
 **Backlog (Prioritized, TDD‑first)**
-1) Search/Filter presets in Message list (behavioral)
-   - Red: unit tests for quick filters by method/id/text; ensure totals reflect filter.
-   - Green: add lightweight client‑side filter presets to components/message-list.tsx (no heavy UI change required).
-
-2) Message export enhancements (behavioral)
-   - Red: tests for selective export (filtered view only) and safe filename generation.
-   - Green: export current filtered rows; add filename including method or time range.
-
-3) Reconnect policy tuning (behavioral)
-   - Red: tests for jitter bounds and max backoff cap; disconnect should cancel scheduled reconnect.
-   - Green: expose DI for jitter fn; config guardrails; add docs.
-
-4) Validator edge cases (tests)
-   - Red: add cases for duplicate ids in batch, extreme `error.code` ranges, empty/mixed items.
-   - Green: align behavior (error vs warning) and document choices in README.
-
-5) Scenario coverage (runn)
-   - Add scenarios for: batch request end‑to‑end, error responses, notification streams.
-   - Keep realistic; does not need full unit coverage.
-
-6) E2E smoke expansion (local only)
-   - Add basic batch send/receive visibility test in Dummy Mode.
-   - Prefer data‑testids for stable locators.
-
-7) Performance/Virtualization (optional)
-   - Consider enabling strict measureElement for variable height if list content varies drastically; add perf note in docs.
+1) Scenario coverage (k6)
+   - 状態: 基本/バッチ/エラー/通知のシナリオを追加済み。
+   - 次: 実環境向け（公開WS）での cloud 実行手順の併記や、より大きなバッチ/遅延ケースの追加（任意）。
 
 **Quality Gates**
 - `pnpm tsc --noEmit` should pass (CI enforced).
@@ -119,4 +110,4 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - CI (local): `just test-ci`
 - Format/Lint: `just format && just lint`
 
-以上。次の着手は「Message list のクイック検索プリセット（Redから）」を推奨します。小さくテストを書き、Green後に必要なら構造の整理（Tidy First）を行ってください。
+以上。次の着手は「Scenario coverage（k6）をRedから追加」を推奨します。小さくシナリオを書き、必要に応じて補助的なユーティリティを整備（Tidy First）してください。
