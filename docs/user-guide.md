@@ -1,129 +1,128 @@
-# JSONRPC WebSocket クライアント 使い方ガイド
+# JSONRPC WebSocket Client — User Guide
 
-このドキュメントは、アプリの画面操作で JSON‑RPC 2.0 over WebSocket を扱うための実用的な使い方をまとめたものです。開発者向けの詳細仕様やテストについてはリポジトリの README を参照してください。
+This guide covers practical UI operations for working with JSON‑RPC 2.0 over WebSocket. For developer policies and testing details, see the repository README and documents under `docs/`.
 
 ---
 
-## 1. 起動手順
+## 1. Getting Started
 
-- 依存関係をインストール
+- Install dependencies
   - `pnpm install`
-- 開発サーバ起動
-  - `pnpm dev` → ブラウザで `http://localhost:3000` を開きます
-- 既定の WebSocket URL
-  - 環境変数 `NEXT_PUBLIC_WS_URL_DEFAULT` を設定すると初期値になります（未設定時は `ws://localhost:8080`）。
+- Start the dev server
+  - `pnpm dev` → open `http://localhost:3000` in your browser
+- Default WebSocket URL
+  - Set `NEXT_PUBLIC_WS_URL_DEFAULT` to change the initial URL shown in the UI.
+  - The example in `.env.example` targets the bundled Go server: `ws://localhost:9999/ws`.
+  - If unset, the app falls back to `ws://localhost:8080`.
 
 ---
 
-## 2. 接続（Connection パネル）
+## 2. Connect (Connection panel)
 
-- Dummy Mode（ダミーモード）
-  - ON にすると、バックエンド不要で擬似ストリームを生成します。
-  - Connect/Disconnect で開始・停止。URL フィールドは Dummy Mode 中は無効化されます。
-- 実サーバ接続
-  - Dummy Mode を OFF にし、WebSocket URL を入力して Connect をクリックします。
-  - 接続状態はバッジ（Disconnected / Connecting / Connected / Error）で表示されます。
-
----
-
-## 3. リクエスト送信（Request フォーム）
-
-- 単発送信
-  - `Method` にメソッド名（例: `user.get`）を入力。
-  - `Parameters (JSON)` に JSON を入力。`Format` で整形できます。
-  - `Send Request` で送信（JSON は Zod バリデーション済み。形式エラーは画面に表示）。
-- バッチ送信
-  - `Batch Mode` を ON にし、`Add Request` で項目を追加。
-  - 各行で `Method` と `Params(JSON)` を入力。
-  - `Send Batch` でまとめて送信。
+- Dummy Mode
+  - When ON, the app generates a simulated stream without any backend.
+  - Use Connect/Disconnect to start/stop. The URL field is disabled while Dummy Mode is ON.
+- Real server connection
+  - Turn OFF Dummy Mode, enter a WebSocket URL, and click Connect.
+  - Status is shown as a badge: Disconnected / Connecting / Connected / Error.
 
 ---
 
-## 4. メッセージ一覧（Messages）
+## 3. Sending Requests (Request form)
 
-- ヘッダの操作
-  - `Auto` … 自動スクロールの ON/OFF
-  - `Export` … 表示中のメッセージを JSON ダウンロード
-  - `Clear` … すべてのメッセージをクリア
-- 種別タブ
-  - `All / Sent / Recv / Notif / Err` の各タブで絞り込み。バッジの件数は「現在の表示（クイックフィルタ適用後）」を反映します。
-- 時間ヘッダ
-  - 一覧は経過時間でグループ化され、スクロール時に現在位置の経過時間をオーバーレイ表示します。
-
-### クイックフィルタ（簡易プリセット）
-
-- `Method:user` … メソッド名に `user` を含むもの
-- `ID:1` … JSON‑RPC の `id`（単発/バッチ内/Message.requestId を含む）に一致
-- `Text:error` … ペイロード JSON の文字列中に `error` を含むもの
-- `Reset Preset` … プリセットの解除
-
-> Export は「現在の表示（クイックフィルタ適用後）」のみを出力します。ファイル名にはフィルタ内容が反映されます（例: `messages-filtered-method-user-YYYY...json`）。
+- Single request
+  - Enter the `Method` (e.g., `user.get`).
+  - Enter JSON in `Parameters (JSON)`. Use `Format` to pretty‑print.
+  - Click `Send Request`. The JSON is validated with Zod; format errors are surfaced in the UI.
+- Batch requests
+  - Turn ON `Batch Mode`, then `Add Request` to add rows.
+  - For each row, set `Method` and `Params (JSON)`.
+  - Click `Send Batch` to send all at once.
 
 ---
 
-## 5. 右ペイン（Details / Notifications）
+## 4. Messages list
 
-- Details（詳細）
-  - メッセージをクリックすると詳細を表示。JSON はハイライト/エスケープ済みで安全に表示されます。
-  - リクエストとレスポンスは矢印とラインで連結表示され、往復の関連が分かります。
-  - バッチはリクエスト/レスポンスのペアを整列して確認できます。
-  - スペック検証（JSON‑RPC 2.0）のエラー/警告はバッジ/リストで表示されます。
-- Notifications（通知）
-  - 通知（`isNotification`）のみを一覧表示。項目を選ぶと Details タブで内容を確認できます。
+- Header actions
+  - `Auto` — toggle auto scroll
+  - `Export` — download currently visible messages as JSON
+  - `Clear` — clear all messages
+- Tabs
+  - Filter by `All / Sent / Recv / Notif / Err`. Badges show counts for the currently visible set (after quick filter).
+- Time headers
+  - The list is grouped by elapsed time; an overlay shows the current time bucket while scrolling.
+
+### Quick filter presets
+
+- `Method:user` — includes messages whose method contains `user`
+- `ID:1` — matches JSON‑RPC `id` (single, inside batch items, and `Message.requestId`)
+- `Text:error` — includes when the payload JSON contains the substring `error`
+- `Reset Preset` — clears the preset
+
+Note: Export includes only the currently visible set (after quick filter). The filename reflects the filter, e.g., `messages-filtered-method-user-YYYY...json`.
 
 ---
 
-## 6. パフォーマンス（Performance タブ）
+## 5. Right pane (Details / Notifications)
+
+- Details
+  - Click a message to view details. JSON is syntax‑highlighted and HTML‑escaped for safe display.
+  - Requests and responses are visually linked, making round‑trips easy to follow.
+  - Batches show aligned request/response pairs.
+  - JSON‑RPC 2.0 validation errors/warnings appear as badges and lists.
+- Notifications
+  - Lists only notifications (`isNotification`). Selecting an item shows its content in the Details tab.
+
+---
+
+## 6. Performance (Performance tab)
 
 - Message Buffer Limit
-  - 表示用リングバッファの上限。小さくすると即時トリムされます。
-  - 既定は環境変数 `NEXT_PUBLIC_MESSAGE_BUFFER_LIMIT`（未指定時は 2000）。
+  - Upper bound of the in‑memory ring buffer. When reduced, trimming happens immediately.
+  - Default comes from `NEXT_PUBLIC_MESSAGE_BUFFER_LIMIT` (fallback `2000`).
 - Buffer Trim Strategy
-  - `Prefer Pending` … 進行中メッセージを優先的に残す
-  - `Prefer Batches` … バッチを優先的に残す
-  - `Drop Chunk Size` … 強制ドロップの塊サイズ（過剰時の前方削除）
+  - `Prefer Pending` — keep in‑flight messages preferentially
+  - `Prefer Batches` — keep batches preferentially
+  - `Drop Chunk Size` — forced drop size for over‑limit trimming
 - Row Height Estimate
-  - `Heuristic` と `Fixed (88px)` を切替。大きなペイロードやバッチではヒューリスティックが有効です。
+  - Switch between `Heuristic` and `Fixed (88px)`. Heuristics help for large payloads and batches.
 
 ---
 
-## 7. 自動再接続（Reconnect）
+## 7. Reconnect
 
-- 接続が切れた場合は指数バックオフで再接続を試みます（上限/ジッタあり）。
-- 接続成功で試行回数はリセット。`Disconnect` をクリックすると予約済み再接続はキャンセルされます。
-
----
-
-## 8. Dummy Mode の活用
-
-- バックエンドがなくても UI の一通りの機能を検証できます（送受信/バッチ/通知/リンク表示など）。
-- 開発者向け（任意）
-  - フックにオプションを渡すと挙動を決定的にできます：
-    - `rng: () => number`（分岐用乱数の差し替え）
-    - `dummy.autoRequestIntervalMs / dummy.notificationIntervalMs`（擬似イベント間隔の変更）
+- On disconnect, the client retries with exponential backoff (cap/jitter supported via DI in the hook).
+- Successful connection resets attempts. Clicking `Disconnect` cancels pending reconnects.
 
 ---
 
-## 9. トラブルシュート
+## 8. Using Dummy Mode
 
-- 接続できない / すぐ切断される
-  - URL の誤り、CORS/CSP、プロキシ/ファイアウォールを確認してください。
-- JSON が送れない / エラー表示になる
-  - `Parameters (JSON)` は「配列」か「オブジェクト」である必要があります。`Format` で整形するとエラーに気付きやすくなります。
-- 画面が重い
-  - `Performance → Message Buffer Limit` を下げる、または `Prefer Pending/Batches` と `Drop Chunk Size` を調整してください。
+- Validate most UI flows without a backend (send/receive, batches, notifications, linking, etc.).
+- Developer options (optional) — pass options to the hook for deterministic behavior:
+  - `rng: () => number` — provide your own RNG
+  - `dummy.autoRequestIntervalMs` / `dummy.notificationIntervalMs` — adjust simulated event intervals
 
 ---
 
-## 10. よくある質問（FAQ）
+## 9. Troubleshooting
 
-- Q. Export は何を含みますか？
-  - A. 現在の表示（クイックフィルタ適用後）だけを含みます。タイムスタンプは ISO 文字列で保存され、インポートで Date に復元可能です。
-- Q. 既定の接続先を変更できますか？
-  - A. 環境変数 `NEXT_PUBLIC_WS_URL_DEFAULT` を設定してください。
-- Q. バリデーションの基準は？
-  - A. JSON‑RPC 2.0 の仕様に準拠しています。レスポンスの `error.code` は整数必須、予約コードは警告として扱います。
+- Cannot connect / disconnects immediately
+  - Check URL, CORS/CSP, and any proxy/firewall in between.
+- JSON won’t send / shows an error
+  - `Parameters (JSON)` must be an array or an object. Use `Format` to catch syntax issues.
+- UI feels heavy
+  - Lower `Performance → Message Buffer Limit`, and/or adjust `Prefer Pending/Batches` and `Drop Chunk Size`.
 
 ---
 
-以上です。まずは Dummy Mode でつなぎ、単発→バッチ→フィルタ→エクスポート→詳細/リンクの一連の流れを試してみてください。
+## 10. FAQ
+
+- What does Export include?
+  - Only the currently visible set after quick filter. Timestamps are saved as ISO strings and round‑trip back to Date on import.
+- Can I change the default endpoint?
+  - Yes. Set `NEXT_PUBLIC_WS_URL_DEFAULT`. The example config uses `ws://localhost:9999/ws` for the bundled Go server.
+- What are the validation rules?
+  - Follows JSON‑RPC 2.0. For responses, `error.code` must be an integer; reserved codes produce warnings.
+
+Start with Dummy Mode, then try a single request, a batch, apply filters, export, and inspect details/linking.

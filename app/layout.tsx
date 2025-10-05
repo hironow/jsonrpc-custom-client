@@ -16,11 +16,14 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	const enableAnalytics =
+		process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === "1" ||
+		process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === "true";
 	return (
 		<html lang="en">
 			<body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
 				{children}
-				<Analytics />
+				{enableAnalytics && <Analytics />}
 			</body>
 		</html>
 	);

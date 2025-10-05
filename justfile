@@ -9,12 +9,12 @@ default: help
 help:
     @just --list --unsorted
 
-# Run CI checks locally
+# Run CI checks locally (TypeScript compile + unit tests)
 test-ci:
     pnpm tsc --noEmit
     pnpm test:unit
 
-# Format the codebase with Biome
+# Format the codebase (via Prettier)
 format:
     pnpm run format
     # Optionally format Go server (skip if Go is not installed)
@@ -24,13 +24,13 @@ format:
 lint:
     pnpm run lint
 
-# Run local E2E smoke tests
+# Run local E2E smoke tests (via Playwright)
 e2e:
     # Install Playwright browsers only for local runs; CI pre-installs & caches them
     if [ -z "${CI:-}" ]; then pnpm playwright:install; fi
     pnpm run test:e2e
 
-# Run E2E against local real WebSocket server
+# Run E2E against local real WebSocket server (at ws://localhost:9999/ws by default)
 e2e-real ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash
     set -euo pipefail
@@ -90,8 +90,7 @@ e2e-real ws_url='ws://localhost:9999/ws':
     set -e
     exit $status
 
-# Deploy the Go WS server to Cloud Run
-# Requires: gcloud CLI logged in; Project set (via GCP_PROJECT or gcloud config); REGION optional (default asia-northeast1 / Tokyo)
+# Deploy the Go WS server to Cloud Run: gcloud CLI logged in; Project set (via GCP_PROJECT or gcloud config); REGION optional (default asia-northeast1 / Tokyo)
 deploy-ws-server service_name='jsonrpc-ws' region='asia-northeast1' concurrency='80' min_instances='0' max_instances='3' port='8080':
     #!/usr/bin/env bash
     set -euo pipefail
@@ -131,7 +130,7 @@ deploy-ws-server service_name='jsonrpc-ws' region='asia-northeast1' concurrency=
     URL=$(gcloud run services describe "${SVC}" --region "${REGION}" --format='value(status.url)')
     echo "   ${URL}/ws"
 
-# k6: Run all WS scenarios against a target URL
+# Run all WS scenarios against a target URL (via k6)
 k6 ws_url:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -149,6 +148,7 @@ k6 ws_url:
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/latency-jsonrpc-ws.js
 
 
+# Start local WS server (if not running) and run all WS scenarios against it (via k6)
 k6-local ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash
     set -euo pipefail

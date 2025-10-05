@@ -72,8 +72,9 @@
 		"vitest": "^3.2.4"
 	},
 	"name": "jsonrpc-custom-client",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"private": true,
+	"license": "MIT",
 	"scripts": {
 		"dev": "next dev",
 		"build": "next build",
