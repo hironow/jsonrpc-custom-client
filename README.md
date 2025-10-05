@@ -74,6 +74,21 @@ Local run:
 - With just: `just k6 ws_url="ws://localhost:9999/ws"`
 - With npm script: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws`
 
+Additional scenarios:
+
+- Batch
+  - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/batch-jsonrpc-ws.js`
+  - just: `just k6-batch ws_url="ws://localhost:9999/ws"`
+  - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:batch`
+- Error response
+  - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/error-jsonrpc-ws.js`
+  - just: `just k6-error ws_url="ws://localhost:9999/ws"`
+  - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:error`
+- Notification stream
+  - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/notification-stream-ws.js`
+  - just: `just k6-notify ws_url="ws://localhost:9999/ws"`
+  - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:notify`
+
 Cloud run (public WS only):
 
 - Direct: `K6_WS_URL=wss://your-server/ws k6 cloud ./tests/k6/basic-jsonrpc-ws.js`
