@@ -62,18 +62,29 @@ For JSON‑RPC over WebSocket scenarios, use k6 (native WS support). Scenarios l
 
 - Install k6 (one-time):
   - macOS: `brew install k6`
-  - Others: https://k6.io/docs/getting-started/installation/
+  - Others: <https://k6.io/docs/getting-started/installation/>
 - Target URL: set `K6_WS_URL` (defaults to `ws://localhost:9999/ws`).
   - Example: `export K6_WS_URL=ws://localhost:9999/ws`
-- Run: `k6 run tests/k6/basic-jsonrpc-ws.js` or `just k6 ws_url="ws://localhost:9999/ws"`
+- Timeout: set `K6_WS_TIMEOUT_MS` (defaults to `5000`).
+  - Example: `export K6_WS_TIMEOUT_MS=8000`
+
+Local run:
+
+- Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/basic-jsonrpc-ws.js`
+- With just: `just k6 ws_url="ws://localhost:9999/ws"`
+- With npm script: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws`
+
+Cloud run (public WS only):
+
+- Direct: `K6_WS_URL=wss://your-server/ws k6 cloud ./tests/k6/basic-jsonrpc-ws.js`
+- With npm script: `K6_WS_URL=wss://your-server/ws npm run k6:cloud`
+- Archive alternative: `npm run k6:archive` → `k6 cloud -e K6_WS_URL=wss://your-server/ws script.tar`
 
 Local server helper (optional):
 
 - Start local Go server and run k6 in one go: `just k6-local`
   - Starts `scripts/ws-jsonrpc-server` on `:9999` (path `/ws`), waits for readiness, then runs the k6 scenario with `K6_WS_URL=ws://localhost:9999/ws`.
   - Stop is automatic on exit (idempotent).
-
- 
 
 ### E2E Tests
 
