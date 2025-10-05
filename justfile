@@ -168,6 +168,24 @@ k6-notify ws_url='ws://localhost:9999/ws':
     fi
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/notification-stream-ws.js
 
+k6-large-batch ws_url='ws://localhost:9999/ws':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v k6 >/dev/null 2>&1; then
+      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
+      exit 1
+    fi
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/large-batch-jsonrpc-ws.js
+
+k6-latency ws_url='ws://localhost:9999/ws':
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v k6 >/dev/null 2>&1; then
+      echo "k6 is not installed. Install: brew install k6 or see https://k6.io/docs/getting-started/installation/" >&2
+      exit 1
+    fi
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/latency-jsonrpc-ws.js
+
 k6-local ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash
     set -euo pipefail
@@ -229,6 +247,9 @@ k6-local ws_url='ws://localhost:9999/ws':
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/batch-jsonrpc-ws.js
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/error-jsonrpc-ws.js
     K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-5000} k6 run tests/k6/notification-stream-ws.js
+    # Extended scenarios
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/large-batch-jsonrpc-ws.js
+    K6_WS_URL={{ws_url}} K6_WS_TIMEOUT_MS=${K6_WS_TIMEOUT_MS:-10000} k6 run tests/k6/latency-jsonrpc-ws.js
 
 k6-local-batch ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash

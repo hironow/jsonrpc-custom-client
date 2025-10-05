@@ -28,8 +28,8 @@ This document is the up‑to‑date engineering plan and handover guide for the 
   - just recipes: `just k6`, `just k6-local` を追加（`K6_WS_TIMEOUT_MS` 既定 5000ms）。
   - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts（Dummy Mode connect flow）。
 - CI
-  - .github/workflows/ci.yaml: pnpm install → typecheck/unit → E2E → k6-local（Grafana k6 v1.3.0）→ build。
-  - k6 セットアップ: grafana/setup-k6-action@v0（version: v1.3.0）。
+  - .github/workflows/ci.yaml: pnpm install → typecheck/unit → E2E → k6-local（Grafana k6 1.3.0）→ build。
+  - k6 セットアップ: grafana/setup-k6-action@v1（version: 1.3.0）。
   - k6 ローカル実行: `just k6-local`（付属 Go WS サーバ起動→k6 実行→停止）。
   - justfile `test-ci` alias（型チェック＋ユニット）。
 - Formatting/Lint
@@ -77,9 +77,9 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Format/Lint: `just format` / `just lint`
 
 **Backlog (Prioritized, TDD‑first)**
-1) Scenario coverage (k6)
-   - 状態: 基本/バッチ/エラー/通知のシナリオを追加済み。
-   - 次: 実環境向け（公開WS）での cloud 実行手順の併記や、より大きなバッチ/遅延ケースの追加（任意）。
+1) k6 Cloud 実行手順とシナリオ拡張（未了）
+   - 実環境向け（公開 WS）での cloud 実行手順を README に明記（`npm run k6:cloud` / `just k6` での `K6_WS_URL`/`K6_WS_TIMEOUT_MS` 設定例）。
+   - より大きなバッチ/遅延ケースのシナリオを追加（任意、負荷の現実性を優先）。
 
 **Quality Gates**
 - `pnpm tsc --noEmit` should pass (CI enforced).

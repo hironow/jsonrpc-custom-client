@@ -88,6 +88,14 @@ Additional scenarios:
   - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/notification-stream-ws.js`
   - just: `just k6-notify ws_url="ws://localhost:9999/ws"`
   - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:notify`
+- Large batch (config: `K6_BATCH_SIZE`, `K6_PAYLOAD_KB`, `K6_WS_TIMEOUT_MS`)
+  - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/large-batch-jsonrpc-ws.js`
+  - just: `just k6-large-batch ws_url="ws://localhost:9999/ws"`
+  - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:large-batch`
+- Latency (records Trend metric `ws_resp_time_ms`; config: `K6_LATENCY_REQS`, `K6_LATENCY_GAP_MS`, `K6_PAYLOAD_KB`, `K6_P95_MS`, `K6_WS_TIMEOUT_MS`)
+  - Direct: `K6_WS_URL=ws://localhost:9999/ws k6 run ./tests/k6/latency-jsonrpc-ws.js`
+  - just: `just k6-latency ws_url="ws://localhost:9999/ws"`
+  - npm: `K6_WS_URL=ws://localhost:9999/ws npm run k6:ws:latency`
 
 Cloud run (public WS only):
 
