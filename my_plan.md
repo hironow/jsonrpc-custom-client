@@ -63,32 +63,9 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - Format/Lint: `just format` / `just lint`
 
 **Backlog (Prioritized, TDD‑first)**
-1) Search/Filter presets in Message list (behavioral)
-   - Red: unit tests for quick filters by method/id/text; ensure totals reflect filter.
-   - Green: add lightweight client‑side filter presets to components/message-list.tsx (no heavy UI change required).
-
-2) Message export enhancements (behavioral)
-   - Red: tests for selective export (filtered view only) and safe filename generation.
-   - Green: export current filtered rows; add filename including method or time range.
-
-3) Reconnect policy tuning (behavioral)
-   - Red: tests for jitter bounds and max backoff cap; disconnect should cancel scheduled reconnect.
-   - Green: expose DI for jitter fn; config guardrails; add docs.
-
-4) Validator edge cases (tests)
-   - Red: add cases for duplicate ids in batch, extreme `error.code` ranges, empty/mixed items.
-   - Green: align behavior (error vs warning) and document choices in README.
-
-5) Scenario coverage (runn)
+1) Scenario coverage (runn)
    - Add scenarios for: batch request end‑to‑end, error responses, notification streams.
    - Keep realistic; does not need full unit coverage.
-
-6) E2E smoke expansion (local only)
-   - Add basic batch send/receive visibility test in Dummy Mode.
-   - Prefer data‑testids for stable locators.
-
-7) Performance/Virtualization (optional)
-   - Consider enabling strict measureElement for variable height if list content varies drastically; add perf note in docs.
 
 **Quality Gates**
 - `pnpm tsc --noEmit` should pass (CI enforced).
@@ -119,4 +96,4 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 - CI (local): `just test-ci`
 - Format/Lint: `just format && just lint`
 
-以上。次の着手は「Message list のクイック検索プリセット（Redから）」を推奨します。小さくテストを書き、Green後に必要なら構造の整理（Tidy First）を行ってください。
+以上。次の着手は「Scenario coverage（runn）をRedから追加」を推奨します。小さくシナリオを書き、必要に応じて補助的なユーティリティを整備（Tidy First）してください。
