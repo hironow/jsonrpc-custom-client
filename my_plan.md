@@ -23,6 +23,7 @@ This document is the up‑to‑date engineering plan and handover guide for the 
   - Extreme payload/batch tests ensure height heuristics are capped and step as designed: tests/virtual-estimate.test.ts.
 - Scenario/E2E scaffolding
   - Scenario (k6): tests/k6/* に統一。通知（idなし）を無視し、応答のみを検証するロジックを実装。
+    - 追加: `basic-jsonrpc-ws.js`（単発 ping）、`batch-jsonrpc-ws.js`（バッチ）、`error-jsonrpc-ws.js`（エラー応答）、`notification-stream-ws.js`（通知ストリーム）。
   - npm scripts: `k6:ws`, `k6:cloud`, `k6:archive` を追加（`K6_WS_URL`, `K6_WS_TIMEOUT_MS` 対応）。
   - just recipes: `just k6`, `just k6-local` を追加（`K6_WS_TIMEOUT_MS` 既定 5000ms）。
   - E2E (Playwright): playwright.config.ts + e2e/basic.spec.ts（Dummy Mode connect flow）。
@@ -77,8 +78,8 @@ This document is the up‑to‑date engineering plan and handover guide for the 
 
 **Backlog (Prioritized, TDD‑first)**
 1) Scenario coverage (k6)
-   - 追加: バッチ応答、エラー応答、通知ストリームの k6 シナリオ。
-   - 方針: 現実的な最小ケースを優先（ユニット並の網羅性は不要）。
+   - 状態: 基本/バッチ/エラー/通知のシナリオを追加済み。
+   - 次: 実環境向け（公開WS）での cloud 実行手順の併記や、より大きなバッチ/遅延ケースの追加（任意）。
 
 **Quality Gates**
 - `pnpm tsc --noEmit` should pass (CI enforced).
