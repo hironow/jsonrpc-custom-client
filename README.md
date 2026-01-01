@@ -2,6 +2,12 @@
 
 Next.js + React UI to explore JSON‑RPC over WebSocket.
 
+## Screenshots
+
+| Initial                                      | Connected                                        | Message Detail                                       |
+| -------------------------------------------- | ------------------------------------------------ | ---------------------------------------------------- |
+| ![Initial](assets/snapshots/01-initial.png)  | ![Connected](assets/snapshots/02-connected.png)  | ![Detail](assets/snapshots/03-message-detail.png)    |
+
 ## Quick Start
 
 - Install deps: `pnpm install`

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(cat:*)",
+      "Bash(pnpm exec playwright test:*)",
+      "Bash(pnpm run format:*)",
+      "Bash(pnpm run lint:*)"
+    ]
+  }
+}
