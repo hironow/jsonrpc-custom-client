@@ -30,6 +30,11 @@ e2e:
     if [ -z "${CI:-}" ]; then pnpm playwright:install; fi
     pnpm run test:e2e
 
+# Regenerate visual regression screenshots (for README)
+screenshots:
+    if [ -z "${CI:-}" ]; then pnpm playwright:install; fi
+    pnpm exec playwright test e2e/visual.spec.ts
+
 # Run E2E against local real WebSocket server (at ws://localhost:9999/ws by default)
 e2e-real ws_url='ws://localhost:9999/ws':
     #!/usr/bin/env bash

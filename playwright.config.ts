@@ -6,6 +6,14 @@ export default defineConfig({
 	// Use all available cores in CI; keep local default
 	workers: process.env.CI ? "100%" : undefined,
 	fullyParallel: true,
+	// Visual regression snapshots
+	snapshotDir: "assets/snapshots",
+	snapshotPathTemplate: "{snapshotDir}/{testFileName}/{arg}{ext}",
+	expect: {
+		toHaveScreenshot: {
+			maxDiffPixelRatio: 0.01,
+		},
+	},
 	use: {
 		baseURL: "http://localhost:3000",
 		headless: true,
