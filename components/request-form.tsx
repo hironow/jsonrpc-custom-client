@@ -59,7 +59,7 @@ export function RequestForm({
 		}
 		const res = singleSchema.safeParse({ method, params: parsed });
 		if (!res.success) {
-			const msg = res.error.errors[0]?.message || "Invalid";
+			const msg = res.error.issues[0]?.message || "Invalid";
 			if (msg.includes("Method")) setMethodError(msg);
 			else setParamsError(msg);
 			return;
@@ -82,7 +82,7 @@ export function RequestForm({
 				});
 				if (!res.success) {
 					hasError = true;
-					const msg = res.error.errors[0]?.message || "Invalid";
+					const msg = res.error.issues[0]?.message || "Invalid";
 					// Reuse paramsError field for surfacing either error (minimal UI change)
 					return { ...req, paramsError: msg };
 				}
