@@ -97,6 +97,7 @@ jobs:
           key: ${{ runner.os }}-playwright-browsers-v${{ steps.pw-version.outputs.PW_VERSION }}
 
       - name: Install Playwright (chromium only)
+        timeout-minutes: 5
         if: steps.playwright-browsers-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
 
