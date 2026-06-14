@@ -12,7 +12,7 @@
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS + Radix UI |
 | Testing | Vitest (unit), Playwright (E2E), k6 (load) |
-| Package Manager | pnpm |
+| Package Manager | bun |
 | Task Runner | just |
 
 ---
@@ -48,9 +48,9 @@ types/connection.ts             # ConnectionStatus union
 
 | Task | Command |
 |------|---------|
-| Dev server | `pnpm dev` |
-| Unit tests | `pnpm test:unit` |
-| E2E tests | `pnpm test:e2e` |
+| Dev server | `bun run dev` |
+| Unit tests | `bun run test:unit` |
+| E2E tests | `bun run test:e2e` |
 | CI (local) | `just test-ci` |
 | Format | `just format` |
 | Lint | `just lint` |
@@ -60,9 +60,9 @@ types/connection.ts             # ConnectionStatus union
 
 ## Quality Gates
 
-- [ ] `pnpm tsc --noEmit` passes
-- [ ] `pnpm test:unit` green
-- [ ] `pnpm lint` clean
+- [ ] `bunx tsc --noEmit` passes
+- [ ] `bun run test:unit` green
+- [ ] `bun run lint` clean
 - [ ] Biome formatted (`just format`)
 
 ---

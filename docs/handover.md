@@ -17,8 +17,8 @@ A working UI (screenshots in `assets/snapshots/`) with user/developer documentat
 - The Next.js 16 upgrade (PR #30) is recent; regressions would surface via CI/e2e rather than docs.
 
 ## Context the Next Actor Needs
-- Use pnpm (lockfile present); tasks are wrapped by the root `justfile`.
-- `just e2e-real` and `pnpm test:e2e:real` expect a real WS server at `ws://localhost:9999/ws`; default e2e runs without it.
+- Use bun (lockfile present); tasks are wrapped by the root `justfile`.
+- `just e2e-real` and `bun run test:e2e:real` expect a real WS server at `ws://localhost:9999/ws`; default e2e runs without it.
 - `just deploy-ws-server` deploys a WS server to Cloud Run (asia-northeast1) — coordinate before touching deployment defaults.
 - Contribution workflow is Tidy First → Tests; see `docs/development.md`.
 
@@ -26,5 +26,5 @@ A working UI (screenshots in `assets/snapshots/`) with user/developer documentat
 - `docs/development.md` — development and testing policies
 - `docs/user-guide.md` / `docs/strategy-presets.md` — UI usage and buffer strategies
 - `justfile` — `just test-ci` / `just e2e` / `just e2e-real` / `just k6-local` / `just deploy-ws-server`
-- `pnpm dev` — local dev server at http://localhost:3000
+- `bun run dev` — local dev server at http://localhost:3000
 - `.env.example` — `NEXT_PUBLIC_WS_URL_DEFAULT` (bundled Go server: `ws://localhost:9999/ws`), buffer limit, analytics flag

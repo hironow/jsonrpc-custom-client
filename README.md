@@ -10,14 +10,14 @@ Next.js + React UI to explore JSON‑RPC over WebSocket.
 
 ## Quick Start
 
-- Install deps: `pnpm install`
+- Install deps: `bun install`
 - Configure env (optional): copy [.env.example](.env.example) → [.env.local](.env.local) and adjust
   - `NEXT_PUBLIC_WS_URL_DEFAULT` – initial WS URL in UI
     - Example in [.env.example](.env.example) points to the bundled Go server: `ws://localhost:9999/ws`
     - If unset, the app falls back to `ws://localhost:8080`
   - `NEXT_PUBLIC_MESSAGE_BUFFER_LIMIT` – ring buffer limit (default `2000`)
   - `NEXT_PUBLIC_ENABLE_ANALYTICS` – render Vercel Analytics when `true` or `1` (default disabled)
-- Run dev server: `pnpm dev` → open `http://localhost:3000`
+- Run dev server: `bun run dev` → open `http://localhost:3000`
 - Try Dummy Mode in the Connection panel and send a request.
 
 ## Documentation
