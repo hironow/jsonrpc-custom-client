@@ -21,9 +21,11 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+        # Installed via the official script rather than oven-sh/setup-bun: this
+        # repo restricts Actions to a selected allowlist that does not include it.
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
 
       # NOTE: the npm Takumi Guard (flatt-security/setup-takumi-guard-npm) was
       # dropped with the bun migration — it intercepts npm-registry traffic and
