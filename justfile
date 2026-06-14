@@ -11,29 +11,29 @@ help:
 
 # Run CI checks locally (TypeScript compile + unit tests)
 test-ci:
-    pnpm tsc --noEmit
-    pnpm test:unit
+    bunx tsc --noEmit
+    bun run test:unit
 
 # Format the codebase (via Prettier)
 format:
-    pnpm run format
+    bun run format
     # Optionally format Go server (skip if Go is not installed)
     (cd scripts/ws-jsonrpc-server && go fmt ./...) || echo "Skipping Go formatting (go not installed?)"
 
 # Lint the codebase (ESLint via Next)
 lint:
-    pnpm run lint
+    bun run lint
 
 # Run local E2E smoke tests (via Playwright)
 e2e:
     # Install Playwright browsers only for local runs; CI pre-installs & caches them
-    if [ -z "${CI:-}" ]; then pnpm playwright:install; fi
-    pnpm run test:e2e
+    if [ -z "${CI:-}" ]; then bun run playwright:install; fi
+    bun run test:e2e
 
 # Regenerate visual regression screenshots (for README)
 screenshots:
-    if [ -z "${CI:-}" ]; then pnpm playwright:install; fi
-    pnpm exec playwright test e2e/visual.spec.ts
+    if [ -z "${CI:-}" ]; then bun run playwright:install; fi
+    bunx playwright test e2e/visual.spec.ts
 
 # Run E2E against local real WebSocket server (at ws://localhost:9999/ws by default)
 e2e-real ws_url='ws://localhost:9999/ws':
@@ -90,7 +90,7 @@ e2e-real ws_url='ws://localhost:9999/ws':
       fi
     fi
     set +e
-    E2E_REAL_WS_URL={{ws_url}} pnpm run test:e2e
+    E2E_REAL_WS_URL={{ws_url}} bun run test:e2e
     status=$?
     set -e
     exit $status
