@@ -52,8 +52,8 @@ If you want to add configurable limits (e.g., maximum `id` length or maximum par
 
 ## How We Test
 
-- Unit tests: Vitest (`pnpm test:unit`).
-- Small utilities: Node’s built‑in test runner via `npm test`.
+- Unit tests: Vitest (`bun run test:unit`).
+- Small utilities: Node’s built‑in test runner via `bun run test`.
 - WebSocket/Dummy stream logic lives in `hooks/use-websocket-client.ts` and is tested with dependency injection (timers/WebSocket factory) for determinism.
 
 ### Scenario Tests (k6)
@@ -105,12 +105,12 @@ Local server helper (optional):
 
 ### E2E Tests (Playwright)
 
-- One‑time setup: `pnpm install && pnpm playwright:install`
-- Run: `pnpm test:e2e` (or `just e2e`)
+- One‑time setup: `bun install && bun run playwright:install`
+- Run: `bun run test:e2e` (or `just e2e`)
 
 Configuration:
 
-- `playwright.config.ts` auto‑starts Next dev via `webServer.command: pnpm dev`.
+- `playwright.config.ts` auto‑starts Next dev via `webServer.command: bun run dev`.
 - Example: `e2e/basic.spec.ts` covers top page → Dummy Mode → Connect → Connected (no backend required).
 - Example: `e2e/devtools-analog.spec.ts` covers inputs, clicks, dialogs, file upload, and title checks on a single page.
 
@@ -119,7 +119,7 @@ Real WebSocket (optional):
 - Enable by setting `E2E_REAL_WS_URL` to your WS URL.
   - macOS/Linux: `export E2E_REAL_WS_URL="wss://your-server.example/ws"`
   - Windows PowerShell: `$env:E2E_REAL_WS_URL="wss://your-server.example/ws"`
-- Run: `pnpm test:e2e` (or local server: `pnpm test:e2e:real` / `just e2e-real`)
+- Run: `bun run test:e2e` (or local server: `bun run test:e2e:real` / `just e2e-real`)
 - Target: `e2e/fast-ping-realws.spec.ts` verifies Fast Ping ON/OFF behavior under a real WS.
 
 Note: Fast JSONRPC Ping (100ms) only sends on a real WS connection. The UI toggle operates in Dummy Mode but does not transmit to keep local runs deterministic.
@@ -134,9 +134,9 @@ For local development, a minimal Go WS server is bundled.
   - `go run . --addr :9999 --path /ws`
 - Connect URL: `ws://localhost:9999/ws`
 - E2E tips:
-  - Start Next dev in another terminal: `pnpm dev`
+  - Start Next dev in another terminal: `bun run dev`
   - Export `E2E_REAL_WS_URL=ws://localhost:9999/ws`
-  - Run `pnpm test:e2e` or `pnpm test:e2e:real` (or `just e2e-real`)
+  - Run `bun run test:e2e` or `bun run test:e2e:real` (or `just e2e-real`)
 
 Supported methods:
 

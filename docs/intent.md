@@ -10,7 +10,7 @@ Provide a Next.js + React UI for exploring JSON-RPC 2.0 over WebSocket: connect 
 
 ## Success Criteria
 - GitHub Actions CI (`.github/workflows/ci.yaml`) is green (`just test-ci`).
-- Unit tests pass (`pnpm test:unit`, Vitest) and Playwright e2e passes (`just e2e`; `just e2e-real` against a real WS server).
+- Unit tests pass (`bun run test:unit`, Vitest) and Playwright e2e passes (`just e2e`; `just e2e-real` against a real WS server).
 - k6 WS load-test scripts under `tests/k6/` run against a target server (`just k6-local`).
 
 ## Scope
@@ -23,7 +23,7 @@ Provide a Next.js + React UI for exploring JSON-RPC 2.0 over WebSocket: connect 
 - 未確認 — no explicit non-goals are documented in the repo.
 
 ## Constraints
-- Package manager is pnpm (`pnpm-lock.yaml`, `pnpm-workspace.yaml`).
+- Package manager is bun (`bun.lock`).
 - Recently upgraded to Next.js 16 (commit a6096fd, PR #30).
 - MIT licensed (`LICENSE`).
 - Contribution workflow follows Tidy First → Tests (README "Notes for Contributors", `docs/development.md`).

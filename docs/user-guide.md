@@ -7,9 +7,9 @@ This guide covers practical UI operations for working with JSON‑RPC 2.0 over W
 ## 1. Getting Started
 
 - Install dependencies
-  - `pnpm install`
+  - `bun install`
 - Start the dev server
-  - `pnpm dev` → open `http://localhost:3000` in your browser
+  - `bun run dev` → open `http://localhost:3000` in your browser
 - Default WebSocket URL
   - Set `NEXT_PUBLIC_WS_URL_DEFAULT` to change the initial URL shown in the UI.
   - The example in `.env.example` targets the bundled Go server: `ws://localhost:9999/ws`.
