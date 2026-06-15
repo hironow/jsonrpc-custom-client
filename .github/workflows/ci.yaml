@@ -26,7 +26,10 @@ jobs:
         # installer (which bypassed the allowlist and was unpinned).
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: latest
+          # canary = Rust rewrite builds (moving tag); executable caching
+          # would pin a stale canary, so disable it
+          bun-version: canary
+          no-cache: true
 
       # NOTE: the npm Takumi Guard (flatt-security/setup-takumi-guard-npm) was
       # dropped with the bun migration — it intercepts npm-registry traffic and
