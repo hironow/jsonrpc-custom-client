@@ -45,6 +45,9 @@ jobs:
           PW_VERSION=$(node -p "require('@playwright/test/package.json').version")
           echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Set up Takumi Guard (PyPI)
+        uses: flatt-security/setup-takumi-guard-pypi@733047c120b6377fa05fb77f714df8d8cd3a41a9 # v1
+
       - name: Install just (rust-just via pipx)
         run: pipx install rust-just
 
@@ -60,7 +63,7 @@ jobs:
           echo "gocache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
 
       - name: Set up Takumi Guard (Go)
-        uses: flatt-security/setup-takumi-guard-golang@v1
+        uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
 
       - name: Cache Go modules and build cache
         id: go-cache-step
