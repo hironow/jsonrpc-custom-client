@@ -18,7 +18,7 @@ jobs:
       PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Setup bun
         # SHA-pinned to v2.2.0. oven-sh/setup-bun was added to this repo's Actions
@@ -49,7 +49,7 @@ jobs:
         run: pipx install rust-just
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
         with:
           go-version: '1.25.x'
 
@@ -60,11 +60,11 @@ jobs:
           echo "gocache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
 
       - name: Set up Takumi Guard (Go)
-        uses: flatt-security/setup-takumi-guard-golang@v1
+        uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
 
       - name: Cache Go modules and build cache
         id: go-cache-step
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             ${{ steps.go-cache.outputs.gomodcache }}
@@ -74,14 +74,14 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Setup k6
-        uses: grafana/setup-k6-action@v1
+        uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065 # v1
         with:
            k6-version: '1.3.0'
            browser: false
 
       - name: Cache Playwright browsers
         id: playwright-browsers-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-browsers-v${{ steps.pw-version.outputs.PW_VERSION }}
@@ -118,7 +118,7 @@ jobs:
 
       - name: Restore Next.js build cache
         id: next-cache
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .next/cache
           key: ${{ runner.os }}-next-cache-${{ hashFiles('bun.lock') }}
