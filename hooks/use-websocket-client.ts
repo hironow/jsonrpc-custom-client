@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { Message } from "@/types/message";
 import type { ConnectionStatus } from "@/types/connection";
 import { validateJsonRpcMessage } from "@/lib/jsonrpc-validator";
@@ -465,23 +465,31 @@ export function useWebSocketClient(options?: {
 			if (reconnectTimeoutRef.current)
 				timer.clearTimeout(reconnectTimeoutRef.current);
 		};
-	}, []);
+	}, [timer]);
 
-	// Apply trimming when the limit or strategy changes
-	useEffect(() => {
-		setMessages((prev) =>
-			trimToLimitWithOptions(prev, messageBufferLimit, {
+	// Adjust derived state during render instead of cascading an effect render.
+	const bufferPolicy = [
+		messageBufferLimit,
+		bufferPreferPending,
+		bufferPreferBatches,
+		bufferDropChunkSize,
+	];
+	const [previousBufferPolicy, setPreviousBufferPolicy] =
+		useState(bufferPolicy);
+	if (
+		bufferPolicy.some((value, index) => value !== previousBufferPolicy[index])
+	) {
+		setPreviousBufferPolicy(bufferPolicy);
+		setMessages((previous) =>
+			trimToLimitWithOptions(previous, messageBufferLimit, {
 				preferPending: bufferPreferPending,
 				preferBatches: bufferPreferBatches,
 				dropChunkSize: bufferDropChunkSize,
 			}),
 		);
-	}, [
-		messageBufferLimit,
-		bufferPreferPending,
-		bufferPreferBatches,
-		bufferDropChunkSize,
-	]);
+	}
+
+	const sendCurrentPing = useEffectEvent(() => sendPing());
 
 	// Start/stop fast ping when enabled and connected (non-dummy)
 	useEffect(() => {
@@ -501,7 +509,7 @@ export function useWebSocketClient(options?: {
 			const interval = Math.max(10, Math.min(60000, fastPingIntervalMs || 100));
 			fastPingIntervalRef.current = timer.setInterval(() => {
 				// Use existing send flow to record messages/latency
-				sendPing();
+				sendCurrentPing();
 			}, interval);
 		}
 
@@ -511,7 +519,7 @@ export function useWebSocketClient(options?: {
 				fastPingIntervalRef.current = null;
 			}
 		};
-	}, [fastPingEnabled, status, dummyMode, fastPingIntervalMs]);
+	}, [fastPingEnabled, status, dummyMode, fastPingIntervalMs, timer]);
 
 	return {
 		url,
