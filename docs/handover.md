@@ -20,9 +20,12 @@ The removed Next.js eslint option was no longer supported; ESLint remains an exp
 
 ## Verification
 
-`just check` passed: lint has zero warnings, TypeScript passes, 88 existing tests and three shell tests pass, Go test succeeds, and production build succeeds.
+`just check` passed: lint has zero warnings, TypeScript passes, 88 existing tests and four shell tests pass, Go test succeeds, and production build succeeds.
 The fast-ping test failed with four retained messages after setting the limit to one, then passed after the repair.
 The virtual-row snapshot test failed before the adapter published updates, then passed.
+A visible-row filtering test caught stale snapshot indices; missing rows are now skipped until the subscription updates.
+CI browser files use runner.temp instead of an unexpanded tilde path inside the repository.
+The setup-just composite dependency setup-crate is allowed.
 CI still needs to verify browser tests, real WebSocket tests, and k6 scenarios.
 
 ## Next Actions
