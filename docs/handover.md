@@ -1,30 +1,38 @@
 # Handover
 
-**Last updated:** 2026-06-10 (JST)
-**Updated by:** claude (AI draft from git history — review before trusting)
+**Last updated:** 2026-10-11 (JST)
+**Updated by:** Codex
 
 ## Current State
-A working UI (screenshots in `assets/snapshots/`) with user/developer documentation under `docs/` (user-guide, development, strategy-presets). Recent work: visualization test added (#27), dependency consolidation and dead-code removal (#29), patch updates (#28), Next.js 15 → 16 upgrade (#30). The last meaningful commit is `b59de17` "docs: add decision queue for human-review items (#31)" on 2026-06-10.
 
-## In Progress
-不明 (git 履歴からは判別できず) — recent commits are docs and dependency maintenance.
+The Flatt removal branch removes the last Go Takumi Guard action and the obsolete npm Guard comment.
+The CI installer uses the SHA-pinned official setup-just action.
+Draft PRs skip CI and ready_for_review starts it.
+Go and application runtime dependency versions are unchanged.
+Bun and jsdom type declarations support the new bun:test suite.
+
+The local gate requires zero ESLint warnings.
+Seventeen old warnings are resolved without disabling lint rules.
+React renders consume clock state and external-store snapshots.
+Fast ping reads the current buffer policy instead of the initial closure.
+Biome configuration uses its installed schema and existing tab style.
+The removed Next.js eslint option was no longer supported; ESLint remains an explicit gate.
+
+## Verification
+
+`just check` passed: lint has zero warnings, TypeScript passes, 88 existing tests and three shell tests pass, Go test succeeds, and production build succeeds.
+The fast-ping test failed with four retained messages after setting the limit to one, then passed after the repair.
+The virtual-row snapshot test failed before the adapter published updates, then passed.
+CI still needs to verify browser tests, real WebSocket tests, and k6 scenarios.
 
 ## Next Actions
-1. requester による docs/intent.md ドラフトのレビューと確定
-2. Watch `docs/decision-queue.md` for human-review items (currently "(none yet)").
 
-## Known Risks / Blockers
-- The Next.js 16 upgrade (PR #30) is recent; regressions would surface via CI/e2e rather than docs.
+1. Create a ready PR from ci/remove-flatt.
+2. Verify every CI check and squash merge.
+3. Remove only the Flatt Actions allowlist patterns and verify main.
 
-## Context the Next Actor Needs
-- Use bun (lockfile present); tasks are wrapped by the root `justfile`.
-- `just e2e-real` and `bun run test:e2e:real` expect a real WS server at `ws://localhost:9999/ws`; default e2e runs without it.
-- `just deploy-ws-server` deploys a WS server to Cloud Run (asia-northeast1) — coordinate before touching deployment defaults.
-- Contribution workflow is Tidy First → Tests; see `docs/development.md`.
+## Context
 
-## Relevant Files and Commands
-- `docs/development.md` — development and testing policies
-- `docs/user-guide.md` / `docs/strategy-presets.md` — UI usage and buffer strategies
-- `justfile` — `just test-ci` / `just e2e` / `just e2e-real` / `just k6-local` / `just deploy-ws-server`
-- `bun run dev` — local dev server at http://localhost:3000
-- `.env.example` — `NEXT_PUBLIC_WS_URL_DEFAULT` (bundled Go server: `ws://localhost:9999/ws`), buffer limit, analytics flag
+The root justfile is the task entry point.
+Deployment tasks need separate production authorization.
+Historical decision-queue entries are preserved.
