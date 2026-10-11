@@ -1,7 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { pushWithLimit } from "@/lib/message-buffer";
-// Will be added TDD-style
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { trimToLimit } from "@/lib/message-buffer";
 import type { Message } from "@/types/message";
 

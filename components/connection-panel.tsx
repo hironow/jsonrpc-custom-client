@@ -21,7 +21,7 @@ import {
 	ChevronUp,
 } from "lucide-react";
 import type { ConnectionStatus } from "@/types/connection";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 type ConnectionPanelProps = {
 	url: string;
@@ -58,13 +58,13 @@ export function ConnectionPanel({
 	pingMatched,
 	pingMissing,
 }: ConnectionPanelProps) {
-	const [isCollapsed, setIsCollapsed] = useState(false);
+	const [isCollapsed, setIsCollapsed] = useState(status === "connected");
 
-	useEffect(() => {
-		if (status === "connected") {
-			setIsCollapsed(true);
-		}
-	}, [status]);
+	const [previousStatus, setPreviousStatus] = useState(status);
+	if (previousStatus !== status) {
+		setPreviousStatus(status);
+		if (status === "connected") setIsCollapsed(true);
+	}
 
 	const getStatusConfig = () => {
 		switch (status) {

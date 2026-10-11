@@ -17,7 +17,7 @@ export const options = {
 	},
 };
 
-export default function () {
+export default function largeBatchJsonrpcWs() {
 	const url = __ENV.K6_WS_URL || "ws://localhost:9999/ws";
 	const timeoutMs = Number(__ENV.K6_WS_TIMEOUT_MS || 10000);
 	const batchSize = Math.max(1, Number(__ENV.K6_BATCH_SIZE || 50));

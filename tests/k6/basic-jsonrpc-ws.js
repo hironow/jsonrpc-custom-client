@@ -19,7 +19,7 @@ export const options = {
 	},
 };
 
-export default function () {
+export default function basicJsonrpcWs() {
 	const url = __ENV.K6_WS_URL || "ws://localhost:9999/ws";
 	const request = { jsonrpc: "2.0", method: "ping", id: 1 };
 	const timeoutMs = Number(__ENV.K6_WS_TIMEOUT_MS || 5000);

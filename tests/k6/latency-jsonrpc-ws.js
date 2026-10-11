@@ -25,7 +25,7 @@ export const options = {
 	},
 };
 
-export default function () {
+export default function latencyJsonrpcWs() {
 	const url = __ENV.K6_WS_URL || "ws://localhost:9999/ws";
 	const timeoutMs = Number(__ENV.K6_WS_TIMEOUT_MS || 10000);
 	const N = Math.max(1, Number(__ENV.K6_LATENCY_REQS || 10));
