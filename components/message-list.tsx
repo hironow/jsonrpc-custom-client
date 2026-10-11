@@ -402,6 +402,7 @@ export function MessageList({
 					>
 						{rowVirtualizer.items.map((virtualRow) => {
 							const row = rows[virtualRow.index];
+							if (!row) return null; // The external snapshot may still describe the previous filter.
 							return (
 								<div
 									key={row.key}

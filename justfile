@@ -20,7 +20,7 @@ format-files *files:
 
 # Verify React shell subscriptions with real timers
 test-react-shell:
-    bun test ./tests/react-shell.bun.ts
+    bun test ./tests/react-shell.bun.tsx
 
 # Run CI checks locally (TypeScript compile + unit tests)
 test-ci:
