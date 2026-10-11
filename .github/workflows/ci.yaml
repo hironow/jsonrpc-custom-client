@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: [ main ]
 
 concurrency:
@@ -12,13 +13,15 @@ concurrency:
 
 jobs:
   build-and-test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     steps:
       - name: Checkout
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Configure browser cache directory
+        run: echo "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/ms-playwright" >> "$GITHUB_ENV"
 
       - name: Setup bun
         # SHA-pinned to v2.2.0. oven-sh/setup-bun was added to this repo's Actions
@@ -31,10 +34,6 @@ jobs:
           bun-version: canary
           no-cache: true
 
-      # NOTE: the npm Takumi Guard (flatt-security/setup-takumi-guard-npm) was
-      # dropped with the bun migration — it intercepts npm-registry traffic and
-      # does not cover bun installs. The Go Takumi Guard below is unchanged.
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -45,8 +44,8 @@ jobs:
           PW_VERSION=$(node -p "require('@playwright/test/package.json').version")
           echo "PW_VERSION=$PW_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Install just (rust-just via pipx)
-        run: pipx install rust-just
+      - name: Install just
+        uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v6
@@ -56,11 +55,8 @@ jobs:
       - name: Compute Go cache paths
         id: go-cache
         run: |
-          echo "gomodcache=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
-          echo "gocache=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-
-      - name: Set up Takumi Guard (Go)
-        uses: flatt-security/setup-takumi-guard-golang@2e3c7c40b538cd68b2ac483def12982ebc8bc02e # v1
+          echo "gomodcache=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
+          echo "gocache=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Go modules and build cache
         id: go-cache-step
@@ -83,7 +79,7 @@ jobs:
         id: playwright-browsers-cache
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          path: ~/.cache/ms-playwright
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
           key: ${{ runner.os }}-playwright-browsers-v${{ steps.pw-version.outputs.PW_VERSION }}
 
       - name: Install Playwright (chromium only)
@@ -99,8 +95,11 @@ jobs:
           echo "Playwright version: ${{ steps['pw-version'].outputs.PW_VERSION }}"
           echo "Hashes — bun.lock: ${{ hashFiles('bun.lock') }}, go.mod: ${{ hashFiles('scripts/ws-jsonrpc-server/go.mod') }}"
 
-      - name: Type check + Unit tests (just)
-        run: just test-ci
+      - name: Lint, type check and unit tests (just)
+        run: |
+          just lint
+          just test-ci
+          just test-react-shell
 
       - name: E2E tests (just e2e)
         run: just e2e

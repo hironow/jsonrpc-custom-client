@@ -1,5 +1,7 @@
 "use client";
 
+import { useClock } from "@/hooks/use-clock";
+
 import {
 	Card,
 	CardContent,
@@ -35,6 +37,7 @@ export function ConnectionQualityMonitor({
 	messages,
 	status,
 }: ConnectionQualityMonitorProps) {
+	const now = useClock();
 	const connectionStats = useMemo(() => {
 		// Extract connection events from system messages
 		const events: ConnectionEvent[] = messages
@@ -81,7 +84,7 @@ export function ConnectionQualityMonitor({
 
 		// If currently connected, add current session time
 		if (status === "connected" && lastConnectMs !== null) {
-			totalUptime += Date.now() - lastConnectMs;
+			totalUptime += now - lastConnectMs;
 		}
 
 		// Calculate average latency from response messages
@@ -126,7 +129,7 @@ export function ConnectionQualityMonitor({
 			qualityScore,
 			recentEvents: events.slice(-5).reverse(),
 		};
-	}, [messages, status]);
+	}, [messages, status, now]);
 
 	const getQualityColor = (score: number): string => {
 		if (score >= 80) return "text-green-500";

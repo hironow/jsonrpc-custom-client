@@ -9,7 +9,7 @@ import { MessageItem } from "@/components/message-item";
 import { Trash2, ArrowDown, ArrowUp, Filter, Clock } from "lucide-react";
 import type { Message } from "@/types/message";
 import { findLinkedMessage } from "@/lib/message-link";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMessageRows } from "@/hooks/use-message-rows";
 import { estimateRowSize } from "@/lib/virtual-estimate";
 import {
 	filterMessagesByQuickFilter,
@@ -116,7 +116,7 @@ export function MessageList({
 		| { key: string; type: "header"; range: string; elapsedMs: number }
 		| { key: string; type: "message"; message: Message };
 
-	const rows: Row[] = useMemo(() => {
+	const rows: Row[] = (() => {
 		const result: Row[] = [];
 		if (filteredMessages.length === 0) return result;
 		const firstMessageTime = messages[0].timestamp.getTime();
@@ -138,7 +138,7 @@ export function MessageList({
 			result.push({ key: msg.id, type: "message", message: msg });
 		});
 		return result;
-	}, [filteredMessages, messages]);
+	})();
 
 	const messageMap = new Map<string | number, Message>();
 	messages.forEach((msg) => {
@@ -204,7 +204,7 @@ export function MessageList({
 
 	// Virtualizer setup
 	const parentRef = scrollRef;
-	const rowVirtualizer = useVirtualizer({
+	const rowVirtualizer = useMessageRows({
 		count: rows.length,
 		getScrollElement: () => parentRef.current,
 		estimateSize: (index) =>
@@ -213,7 +213,6 @@ export function MessageList({
 					? 28
 					: 88
 				: estimateRowSize(rows[index] as any),
-		overscan: 10,
 	});
 
 	return (
@@ -397,12 +396,13 @@ export function MessageList({
 				) : (
 					<div
 						style={{
-							height: rowVirtualizer.getTotalSize(),
+							height: rowVirtualizer.totalSize,
 							position: "relative",
 						}}
 					>
-						{rowVirtualizer.getVirtualItems().map((virtualRow) => {
+						{rowVirtualizer.items.map((virtualRow) => {
 							const row = rows[virtualRow.index];
+							if (!row) return null; // The external snapshot may still describe the previous filter.
 							return (
 								<div
 									key={row.key}

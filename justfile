@@ -9,6 +9,23 @@ default: help
 help:
     @just --list --unsorted
 
+# Run the full local gate
+check: lint-workflows lint test-ci test-react-shell
+    cd scripts/ws-jsonrpc-server && go test ./...
+    bun run build
+
+# Validate GitHub Actions expressions and shell scripts
+lint-workflows:
+    actionlint .github/workflows/*.yaml
+
+# Format selected files without changing unrelated files
+format-files *files:
+    bunx biome format --write {{files}}
+
+# Verify React shell subscriptions with real timers
+test-react-shell:
+    bun test ./tests/react-shell.bun.tsx
+
 # Run CI checks locally (TypeScript compile + unit tests)
 test-ci:
     bunx tsc --noEmit
@@ -22,7 +39,7 @@ format:
 
 # Lint the codebase (ESLint via Next)
 lint:
-    bun run lint
+    bun run lint --max-warnings 0
 
 # Run local E2E smoke tests (via Playwright)
 e2e:

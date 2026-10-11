@@ -13,7 +13,7 @@ export const options = {
 	},
 };
 
-export default function () {
+export default function notificationStreamWs() {
 	const url = __ENV.K6_WS_URL || "ws://localhost:9999/ws";
 	const timeoutMs = Number(__ENV.K6_WS_TIMEOUT_MS || 5000);
 

@@ -27,11 +27,20 @@ function makeWs(): FakeWS {
 }
 
 function FastPingHarness({ timer, wsFactory }: any) {
-	const { status, connect, setDummyMode, fastPingEnabled, setFastPingEnabled } =
-		useWebSocketClient({ timer, wsFactory });
+	const {
+		status,
+		connect,
+		setDummyMode,
+		fastPingEnabled,
+		setFastPingEnabled,
+		messages,
+		setMessageBufferLimit,
+	} = useWebSocketClient({ timer, wsFactory });
 	return (
 		<div>
 			<div data-testid="status">{status}</div>
+			<div data-testid="message-count">{messages.length}</div>
+			<button onClick={() => setMessageBufferLimit(1)}>limitOne</button>
 			<div data-testid="ping">{fastPingEnabled ? "on" : "off"}</div>
 			<button onClick={() => setDummyMode(false)}>noDummy</button>
 			<button onClick={() => connect()}>connect</button>
@@ -93,6 +102,17 @@ describe("useWebSocketClient fast ping toggle", () => {
 			expect(sendMock.mock.calls.length).toBeGreaterThanOrEqual(3);
 			const countAfterOn = sendMock.mock.calls.length;
 
+			// A running interval must read the current buffer limit.
+			await act(async () => {
+				screen.getByText("limitOne").click();
+			});
+			await act(async () => {
+				vi.advanceTimersByTime(300);
+			});
+			expect(Number(screen.getByTestId("message-count").textContent)).toBe(1);
+			expect(sendMock.mock.calls.length).toBeGreaterThan(countAfterOn);
+			const countAfterLimitChange = sendMock.mock.calls.length;
+
 			// turn off and ensure it stops increasing
 			await act(async () => {
 				screen.getByText("pingOff").click();
@@ -102,7 +122,7 @@ describe("useWebSocketClient fast ping toggle", () => {
 				vi.advanceTimersByTime(300);
 			});
 
-			expect(sendMock.mock.calls.length).toBe(countAfterOn);
+			expect(sendMock.mock.calls.length).toBe(countAfterLimitChange);
 		});
 	});
 });

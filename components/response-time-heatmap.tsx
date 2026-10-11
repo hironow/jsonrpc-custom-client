@@ -1,5 +1,7 @@
 "use client";
 
+import { useClock } from "@/hooks/use-clock";
+
 import {
 	Card,
 	CardContent,
@@ -22,12 +24,12 @@ interface HeatmapCell {
 }
 
 export function ResponseTimeHeatmap({ messages }: ResponseTimeHeatmapProps) {
+	const now = useClock();
 	const calculateHeatmapData = (): HeatmapCell[] => {
 		const cells: Map<string, { totalLatency: number; count: number }> =
 			new Map();
 
 		// Get time range
-		const now = Date.now();
 		const oneHourAgo = now - 60 * 60 * 1000;
 		const bucketSize = 5 * 60 * 1000; // 5 minutes
 
