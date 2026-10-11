@@ -10,9 +10,13 @@ help:
     @just --list --unsorted
 
 # Run the full local gate
-check: lint test-ci test-react-shell
+check: lint-workflows lint test-ci test-react-shell
     cd scripts/ws-jsonrpc-server && go test ./...
     bun run build
+
+# Validate GitHub Actions expressions and shell scripts
+lint-workflows:
+    actionlint .github/workflows/*.yaml
 
 # Format selected files without changing unrelated files
 format-files *files:

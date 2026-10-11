@@ -52,6 +52,10 @@ If you want to add configurable limits (e.g., maximum `id` length or maximum par
 
 ## How We Test
 
+`just check` validates workflow syntax with actionlint, requires zero ESLint warnings, checks TypeScript, runs unit and shell tests, verifies the Go server, and builds the UI.
+The shell tests use bun:test with JSDOM; they test subscriptions and rendering rather than a real browser.
+`just e2e`, `just e2e-real`, and `just k6-local` exercise the browser and real WebSocket server in CI.
+
 - Unit tests: Vitest (`bun run test:unit`).
 - Small utilities: Node’s built‑in test runner via `bun run test`.
 - WebSocket/Dummy stream logic lives in `hooks/use-websocket-client.ts` and is tested with dependency injection (timers/WebSocket factory) for determinism.
