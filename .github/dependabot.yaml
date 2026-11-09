@@ -1,0 +1,54 @@
+# Dependabot version updates.
+#
+# hironow house style (amadeus/tablecodec/dotfiles/firepact): a 7-day cooldown for
+# supply-chain hardening -- a routine bump is not proposed until the release has been
+# public for a week, so a compromised-then-yanked version is not pulled in on day zero.
+# Cooldown applies to version updates only; Dependabot SECURITY updates bypass it.
+#
+# Each ecosystem is grouped into a single pull request so a week's bumps land together.
+#
+# Ecosystems in this repository: the bun frontend/agent app, the Go JSON-RPC server
+# under scripts/, and the workflows themselves.
+version: 2
+updates:
+
+  - package-ecosystem: "bun"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    labels: ["dependencies", "npm"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      bun:
+        patterns: ["*"]
+
+  - package-ecosystem: "gomod"
+    directory: "/scripts/ws-jsonrpc-server"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    labels: ["dependencies", "gomod"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      gomod:
+        patterns: ["*"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns: ["*"]
