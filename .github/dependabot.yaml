@@ -38,6 +38,17 @@ updates:
     cooldown:
       default-days: 7
     labels: ["dependencies", "npm"]
+    # Held back deliberately: typescript 7 is the Go-native rewrite and breaks
+    # @typescript-eslint under eslint 10 (the CI lint crash), and these two carry
+    # breaking majors (react-day-picker 10, react-resizable-panels 4) that the app
+    # has not migrated to yet. Remove an entry once that migration lands.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-day-picker"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-resizable-panels"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "gomod"
     patterns: ["*"]
     multi-ecosystem-group: "weekly"
